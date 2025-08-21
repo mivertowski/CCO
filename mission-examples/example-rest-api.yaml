@@ -1,0 +1,60 @@
+mission:
+  title: "Build REST API for Task Management"
+  repository: "./task-api-repo"
+  description: |
+    Create a complete REST API with CRUD operations for a task management system
+    using Node.js, Express, and PostgreSQL. The API should support user authentication,
+    task creation, assignment, and status tracking.
+  
+  definition_of_done:
+    - criteria: "All CRUD endpoints implemented (GET, POST, PUT, DELETE for /tasks)"
+      measurable: true
+      priority: critical
+    
+    - criteria: "User authentication with JWT tokens"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Input validation on all endpoints using Joi or Zod"
+      measurable: true
+      priority: high
+    
+    - criteria: "Error handling middleware with proper HTTP status codes"
+      measurable: true
+      priority: high
+    
+    - criteria: "Unit tests with >80% code coverage"
+      measurable: true
+      priority: high
+    
+    - criteria: "Integration tests for all API endpoints"
+      measurable: true
+      priority: medium
+    
+    - criteria: "API documentation generated with Swagger/OpenAPI"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Database migrations setup with proper versioning"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Docker containerization with docker-compose"
+      measurable: true
+      priority: low
+    
+    - criteria: "Environment configuration with .env files"
+      measurable: true
+      priority: high
+  
+  constraints:
+    - "Use TypeScript for type safety"
+    - "Follow RESTful conventions strictly"
+    - "Implement proper error handling and logging"
+    - "Use PostgreSQL as the database"
+    - "Include rate limiting on API endpoints"
+  
+  context: |
+    This is a greenfield project for a task management system. The API will be consumed
+    by both web and mobile clients. Security and reliability are top priorities.
+    The system should be able to handle multiple users with role-based access control.

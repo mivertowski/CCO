@@ -1,0 +1,68 @@
+mission:
+  title: "Build .NET Console Application with DI and Configuration"
+  repository: "./dotnet-console-project"
+  description: |
+    Create a robust .NET console application that processes CSV files,
+    transforms data, and exports to multiple formats using dependency injection,
+    configuration management, and proper logging.
+  
+  definition_of_done:
+    - criteria: "Console application created with .NET 8 and proper project structure"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Dependency injection container configured using Microsoft.Extensions.DependencyInjection"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Configuration management with appsettings.json and user secrets"
+      measurable: true
+      priority: high
+    
+    - criteria: "CSV file reading and parsing implementation"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Data transformation pipeline with strategy pattern"
+      measurable: true
+      priority: high
+    
+    - criteria: "Export to JSON, XML, and Excel formats"
+      measurable: true
+      priority: high
+    
+    - criteria: "Command-line argument parsing with System.CommandLine"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Structured logging with Serilog"
+      measurable: true
+      priority: high
+    
+    - criteria: "Error handling and retry logic with Polly"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Unit tests with xUnit and Moq"
+      measurable: true
+      priority: high
+    
+    - criteria: "Performance benchmarks with BenchmarkDotNet"
+      measurable: true
+      priority: low
+    
+    - criteria: "File watcher for automatic processing"
+      measurable: true
+      priority: medium
+  
+  constraints:
+    - "Use .NET 8"
+    - "Follow SOLID principles"
+    - "Use async/await for I/O operations"
+    - "Implement proper disposal patterns (IDisposable)"
+    - "Use CsvHelper library for CSV operations"
+  
+  context: |
+    This console application will be used for batch processing of large CSV files
+    in a scheduled task environment. It needs to be reliable, performant, and
+    maintainable with proper logging for troubleshooting.

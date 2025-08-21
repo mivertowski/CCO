@@ -1,0 +1,37 @@
+# CCO Configuration Example - Using Free Models
+# This configuration uses free models to minimize costs during testing
+
+orchestrator:
+  mode: "single_instance"
+  max_iterations: 100  # Limit iterations for testing
+  checkpoint_interval: 5
+  
+repository:
+  path: "./my-project"
+  auto_commit: false  # Manual commits for testing
+  commit_frequency: "per_session"
+  
+# OpenRouter configuration with free model
+openrouter:
+  api_key: ${OPENROUTER_API_KEY}
+  model: "meta-llama/llama-3.2-3b-instruct:free"  # Free Llama model
+  # Alternative free models:
+  # model: "google/gemini-2.0-flash-exp:free"
+  # model: "mistralai/mistral-7b-instruct:free"
+  # model: "huggingface/zephyr-7b-beta:free"
+  temperature: 0.5
+  
+# Claude Code configuration - subscription mode
+claude_code:
+  use_subscription: true  # Use Claude Code subscription (no API key needed)
+  # api_key: ${ANTHROPIC_API_KEY}  # Not needed with subscription
+  workspace: "./my-project"
+  max_file_size: 100000
+  
+persistence:
+  type: "file"
+  path: ".cco/sessions"
+  
+monitoring:
+  log_level: "INFO"
+  log_path: ".cco/logs"

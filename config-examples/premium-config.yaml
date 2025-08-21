@@ -1,0 +1,37 @@
+# CCO Configuration Example - Premium Models
+# This configuration uses the most capable models for production use
+
+orchestrator:
+  mode: "single_instance"
+  max_iterations: 1000
+  checkpoint_interval: 10
+  
+repository:
+  path: "./production-project"
+  auto_commit: true
+  commit_frequency: "per_session"
+  
+# OpenRouter configuration with premium model
+openrouter:
+  api_key: ${OPENROUTER_API_KEY}
+  model: "anthropic/claude-opus-4-1"  # Latest Claude Opus 4.1
+  # Alternative premium models:
+  # model: "openai/gpt-4o"  # Latest GPT-4
+  # model: "google/gemini-pro-1.5"  # Google's best
+  # model: "deepseek/deepseek-v3"  # Excellent for coding
+  temperature: 0.3  # Lower temperature for more consistent output
+  
+# Claude Code configuration - API mode
+claude_code:
+  use_subscription: false  # Use API mode
+  api_key: ${ANTHROPIC_API_KEY}
+  workspace: "./production-project"
+  max_file_size: 200000
+  
+persistence:
+  type: "file"
+  path: ".cco/sessions"
+  
+monitoring:
+  log_level: "DEBUG"  # More detailed logging for production
+  log_path: ".cco/logs"

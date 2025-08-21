@@ -1,0 +1,86 @@
+mission:
+  title: "Build .NET Core Web API with Entity Framework"
+  repository: "./dotnet-api-project"
+  description: |
+    Create a complete ASP.NET Core Web API with Entity Framework Core for a 
+    product inventory management system. The API should support authentication,
+    CRUD operations, and follow .NET best practices.
+  
+  definition_of_done:
+    - criteria: "ASP.NET Core Web API project initialized with .NET 8"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Entity Framework Core configured with SQL Server/SQLite"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Domain models created (Product, Category, Supplier)"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Repository pattern implemented with Unit of Work"
+      measurable: true
+      priority: high
+    
+    - criteria: "JWT authentication and authorization configured"
+      measurable: true
+      priority: critical
+    
+    - criteria: "CRUD endpoints for all entities with proper HTTP verbs"
+      measurable: true
+      priority: critical
+    
+    - criteria: "Model validation using Data Annotations and FluentValidation"
+      measurable: true
+      priority: high
+    
+    - criteria: "Global exception handling middleware"
+      measurable: true
+      priority: high
+    
+    - criteria: "Unit tests using xUnit with >80% coverage"
+      measurable: true
+      priority: high
+    
+    - criteria: "Integration tests for all API endpoints"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Swagger/OpenAPI documentation configured"
+      measurable: true
+      priority: high
+    
+    - criteria: "Database migrations properly configured"
+      measurable: true
+      priority: high
+    
+    - criteria: "Logging with Serilog to file and console"
+      measurable: true
+      priority: medium
+    
+    - criteria: "Health checks endpoint configured"
+      measurable: true
+      priority: low
+    
+    - criteria: "Docker support with multi-stage build"
+      measurable: true
+      priority: low
+    
+    - criteria: "appsettings.json with environment-specific configurations"
+      measurable: true
+      priority: high
+  
+  constraints:
+    - "Use .NET 8 (latest LTS version)"
+    - "Follow Microsoft's REST API design guidelines"
+    - "Use async/await for all database operations"
+    - "Implement SOLID principles"
+    - "Use dependency injection throughout"
+    - "Follow C# naming conventions and coding standards"
+  
+  context: |
+    This is an enterprise-grade inventory management API that will be consumed by
+    multiple client applications including mobile, web, and desktop. Performance,
+    security, and maintainability are critical. The system should handle
+    concurrent users and be ready for cloud deployment (Azure/AWS).
