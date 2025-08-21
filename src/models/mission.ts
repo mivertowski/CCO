@@ -29,7 +29,9 @@ export const MissionSchema = z.object({
   constraints: z.array(z.string()).optional(),
   createdAt: z.date(),
   startedAt: z.date().optional(),
-  completedAt: z.date().optional()
+  completedAt: z.date().optional(),
+  currentPhase: z.string().optional(),
+  metadata: z.any().optional()
 });
 
 export type Mission = z.infer<typeof MissionSchema>;

@@ -1,0 +1,265 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GitHubClient = exports.GitHubConfigSchema = void 0;
+const rest_1 = require("@octokit/rest");
+const zod_1 = require("zod");
+const child_process = __importStar(require("child_process"));
+const util_1 = require("util");
+const exec = (0, util_1.promisify)(child_process.exec);
+exports.GitHubConfigSchema = zod_1.z.object({
+    token: zod_1.z.string().optional(),
+    owner: zod_1.z.string(),
+    repo: zod_1.z.string(),
+    baseUrl: zod_1.z.string().optional(),
+});
+class GitHubClient {
+    octokit = null;
+    config;
+    logger;
+    useGHCLI = false;
+    constructor(config, logger) {
+        this.config = exports.GitHubConfigSchema.parse(config);
+        this.logger = logger;
+        // Try to use GitHub token if available
+        if (this.config.token) {
+            this.octokit = new rest_1.Octokit({
+                auth: this.config.token,
+                baseUrl: this.config.baseUrl,
+            });
+        }
+        else {
+            // Fall back to gh CLI if available
+            this.useGHCLI = true;
+            this.logger.info('Using GitHub CLI for GitHub operations');
+        }
+    }
+    async createPullRequest(options) {
+        try {
+            if (this.useGHCLI) {
+                return await this.createPRWithCLI(options);
+            }
+            if (!this.octokit) {
+                throw new Error('GitHub client not initialized');
+            }
+            const { data } = await this.octokit.pulls.create({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                title: options.title,
+                body: options.body,
+                head: options.head,
+                base: options.base || 'main',
+                draft: options.draft || false,
+            });
+            // Add labels if specified
+            if (options.labels && options.labels.length > 0) {
+                await this.octokit.issues.addLabels({
+                    owner: this.config.owner,
+                    repo: this.config.repo,
+                    issue_number: data.number,
+                    labels: options.labels,
+                });
+            }
+            // Request reviews if specified
+            if (options.reviewers || options.teamReviewers) {
+                await this.octokit.pulls.requestReviewers({
+                    owner: this.config.owner,
+                    repo: this.config.repo,
+                    pull_number: data.number,
+                    reviewers: options.reviewers,
+                    team_reviewers: options.teamReviewers,
+                });
+            }
+            this.logger.info('Created pull request', {
+                number: data.number,
+                url: data.html_url,
+            });
+            return {
+                number: data.number,
+                html_url: data.html_url,
+            };
+        }
+        catch (error) {
+            this.logger.error('Failed to create pull request', { error });
+            throw error;
+        }
+    }
+    async createPRWithCLI(options) {
+        try {
+            // Create PR using gh CLI
+            const labels = options.labels ? `--label "${options.labels.join(',')}"` : '';
+            const reviewers = options.reviewers ? `--reviewer "${options.reviewers.join(',')}"` : '';
+            const command = `gh pr create --title "${options.title}" --body "${options.body.replace(/"/g, '\\"')}" --head "${options.head}" --base "${options.base || 'main'}" ${labels} ${reviewers}`;
+            const { stdout } = await exec(command);
+            // Extract PR URL from output
+            const urlMatch = stdout.match(/https:\/\/github\.com\/[^\s]+/);
+            const numberMatch = stdout.match(/\/pull\/(\d+)/);
+            if (!urlMatch || !numberMatch) {
+                throw new Error('Failed to parse PR creation output');
+            }
+            return {
+                number: parseInt(numberMatch[1]),
+                html_url: urlMatch[0],
+            };
+        }
+        catch (error) {
+            this.logger.error('Failed to create PR with gh CLI', { error });
+            throw error;
+        }
+    }
+    async getIssue(issueNumber) {
+        try {
+            if (this.useGHCLI) {
+                const { stdout } = await exec(`gh issue view ${issueNumber} --json number,title,body,state,labels,author,createdAt,url`);
+                const data = JSON.parse(stdout);
+                return {
+                    number: data.number,
+                    title: data.title,
+                    body: data.body,
+                    state: data.state,
+                    labels: data.labels.map((l) => ({ name: l.name })),
+                    user: { login: data.author.login },
+                    created_at: data.createdAt,
+                    html_url: data.url,
+                };
+            }
+            if (!this.octokit) {
+                throw new Error('GitHub client not initialized');
+            }
+            const { data } = await this.octokit.issues.get({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                issue_number: issueNumber,
+            });
+            return {
+                number: data.number,
+                title: data.title,
+                body: data.body || '',
+                state: data.state,
+                labels: data.labels.map((l) => ({ name: typeof l === 'string' ? l : l.name })),
+                user: { login: data.user?.login || 'unknown' },
+                created_at: data.created_at,
+                html_url: data.html_url,
+            };
+        }
+        catch (error) {
+            this.logger.error('Failed to get issue', { error, issueNumber });
+            throw error;
+        }
+    }
+    async createIssueComment(issueNumber, body) {
+        try {
+            if (this.useGHCLI) {
+                await exec(`gh issue comment ${issueNumber} --body "${body.replace(/"/g, '\\"')}"`);
+                return;
+            }
+            if (!this.octokit) {
+                throw new Error('GitHub client not initialized');
+            }
+            await this.octokit.issues.createComment({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                issue_number: issueNumber,
+                body,
+            });
+            this.logger.info('Created issue comment', { issueNumber });
+        }
+        catch (error) {
+            this.logger.error('Failed to create issue comment', { error, issueNumber });
+            throw error;
+        }
+    }
+    async listLabels() {
+        try {
+            if (this.useGHCLI) {
+                const { stdout } = await exec(`gh label list --json name`);
+                const labels = JSON.parse(stdout);
+                return labels.map((l) => l.name);
+            }
+            if (!this.octokit) {
+                throw new Error('GitHub client not initialized');
+            }
+            const { data } = await this.octokit.issues.listLabelsForRepo({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                per_page: 100,
+            });
+            return data.map(l => l.name);
+        }
+        catch (error) {
+            this.logger.error('Failed to list labels', { error });
+            return [];
+        }
+    }
+    async getCurrentBranch() {
+        try {
+            const { stdout } = await exec('git branch --show-current');
+            return stdout.trim();
+        }
+        catch (error) {
+            this.logger.error('Failed to get current branch', { error });
+            return 'main';
+        }
+    }
+    async createBranch(branchName, baseBranch = 'main') {
+        try {
+            await exec(`git checkout -b ${branchName} origin/${baseBranch}`);
+            this.logger.info('Created branch', { branchName, baseBranch });
+        }
+        catch (error) {
+            // Branch might already exist
+            try {
+                await exec(`git checkout ${branchName}`);
+                this.logger.info('Switched to existing branch', { branchName });
+            }
+            catch (switchError) {
+                this.logger.error('Failed to create or switch branch', { error, switchError });
+                throw error;
+            }
+        }
+    }
+    async pushBranch(branchName) {
+        try {
+            await exec(`git push -u origin ${branchName}`);
+            this.logger.info('Pushed branch', { branchName });
+        }
+        catch (error) {
+            this.logger.error('Failed to push branch', { error, branchName });
+            throw error;
+        }
+    }
+}
+exports.GitHubClient = GitHubClient;
+//# sourceMappingURL=github-client.js.map

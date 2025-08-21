@@ -187,11 +187,11 @@ export declare const SessionStateSchema: z.ZodObject<{
     metadata: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
 }, "strip", z.ZodTypeAny, {
     repository: string;
+    currentPhase: SessionPhase;
     timestamp: Date;
     sessionId: string;
     missionId: string;
     ccInstanceId: string;
-    currentPhase: SessionPhase;
     completedTasks: string[];
     pendingTasks: string[];
     artifacts: {
@@ -223,15 +223,15 @@ export declare const SessionStateSchema: z.ZodObject<{
         resolution?: string | undefined;
     }[];
     iterations: number;
-    lastCheckpoint?: Date | undefined;
     metadata?: Record<string, any> | undefined;
+    lastCheckpoint?: Date | undefined;
 }, {
     repository: string;
+    currentPhase: SessionPhase;
     timestamp: Date;
     sessionId: string;
     missionId: string;
     ccInstanceId: string;
-    currentPhase: SessionPhase;
     completedTasks: string[];
     pendingTasks: string[];
     artifacts: {
@@ -262,9 +262,9 @@ export declare const SessionStateSchema: z.ZodObject<{
         resolved?: boolean | undefined;
         resolution?: string | undefined;
     }[];
+    metadata?: Record<string, any> | undefined;
     iterations?: number | undefined;
     lastCheckpoint?: Date | undefined;
-    metadata?: Record<string, any> | undefined;
 }>;
 export type SessionState = z.infer<typeof SessionStateSchema>;
 export interface SessionContext {

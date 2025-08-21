@@ -66,6 +66,8 @@ export declare const MissionSchema: z.ZodObject<{
     createdAt: z.ZodDate;
     startedAt: z.ZodOptional<z.ZodDate>;
     completedAt: z.ZodOptional<z.ZodDate>;
+    currentPhase: z.ZodOptional<z.ZodString>;
+    metadata: z.ZodOptional<z.ZodAny>;
 }, "strip", z.ZodTypeAny, {
     id: string;
     description: string;
@@ -85,6 +87,8 @@ export declare const MissionSchema: z.ZodObject<{
     context?: string | undefined;
     constraints?: string[] | undefined;
     startedAt?: Date | undefined;
+    currentPhase?: string | undefined;
+    metadata?: any;
 }, {
     id: string;
     description: string;
@@ -104,6 +108,8 @@ export declare const MissionSchema: z.ZodObject<{
     context?: string | undefined;
     constraints?: string[] | undefined;
     startedAt?: Date | undefined;
+    currentPhase?: string | undefined;
+    metadata?: any;
 }>;
 export type Mission = z.infer<typeof MissionSchema>;
 export interface MissionProgress {

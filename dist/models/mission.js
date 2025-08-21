@@ -28,6 +28,8 @@ exports.MissionSchema = zod_1.z.object({
     constraints: zod_1.z.array(zod_1.z.string()).optional(),
     createdAt: zod_1.z.date(),
     startedAt: zod_1.z.date().optional(),
-    completedAt: zod_1.z.date().optional()
+    completedAt: zod_1.z.date().optional(),
+    currentPhase: zod_1.z.string().optional(),
+    metadata: zod_1.z.any().optional()
 });
 //# sourceMappingURL=mission.js.map
