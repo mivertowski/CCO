@@ -21,6 +21,7 @@ const ConfigSchema = z.object({
   claude_code: z.object({
     api_key: z.string().optional(),
     use_subscription: z.boolean().default(false),
+    use_sdk: z.boolean().default(true), // Use SDK by default for better automation
     workspace: z.string(),
     max_file_size: z.number().default(100000)
   }),

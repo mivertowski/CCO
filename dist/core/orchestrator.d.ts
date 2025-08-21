@@ -2,13 +2,13 @@ import { Mission } from '../models/mission';
 import { SessionState, Artifact } from '../models/session';
 import { OrchestrationMetrics } from '../models/metrics';
 import { OpenRouterClient } from '../llm/openrouter-client';
-import { ClaudeCodeClient } from '../llm/claude-code-client';
+import { IClaudeCodeClient } from '../llm/claude-code-interface';
 import { SessionManager } from './session-manager';
 import winston from 'winston';
 export interface OrchestratorConfig {
     mission: Mission;
     openRouterClient: OpenRouterClient;
-    claudeCodeClient: ClaudeCodeClient;
+    claudeCodeClient: IClaudeCodeClient;
     sessionManager: SessionManager;
     logger: winston.Logger;
     checkpointInterval?: number;

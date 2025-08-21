@@ -22,6 +22,8 @@ import { Orchestrator } from '../core/orchestrator';
 import { SessionManager } from '../core/session-manager';
 import { OpenRouterClient } from '../llm/openrouter-client';
 import { ClaudeCodeClient } from '../llm/claude-code-client';
+import { ClaudeCodeSDKClient } from '../llm/claude-code-sdk-client';
+import { IClaudeCodeClient } from '../llm/claude-code-interface';
 import { loadConfig } from '../config/config-loader';
 import inquirer from 'inquirer';
 
@@ -107,6 +109,7 @@ program
   .description('Start orchestration with a mission')
   .option('-m, --mission <path>', 'Path to mission file', 'mission.yaml')
   .option('-c, --config <path>', 'Path to config file', '.cco/config.yaml')
+  .option('--use-sdk', 'Use Claude Code SDK for automation (recommended)')
   .option('--resume', 'Resume from last session')
   .action(async (options) => {
     const spinner = ora('Starting orchestration...').start();
@@ -161,19 +164,40 @@ program
         logger
       );
       
-      const claudeCodeClient = new ClaudeCodeClient(
-        {
-          apiKey: process.env.ANTHROPIC_API_KEY,
-          useSubscription: config.claude_code?.use_subscription || false,
-          projectPath: mission.repository,
-          maxIterations: config.orchestrator.max_iterations,
-          model: 'claude-opus-4-1-20250805',
-          temperature: 0.3,
-          timeoutMs: 300000,
-          contextWindow: 200000
-        },
-        logger
-      );
+      // Choose between SDK and legacy client
+      let claudeCodeClient: IClaudeCodeClient;
+      
+      if (options.useSdk || config.claude_code?.use_sdk) {
+        // Use the new SDK client (recommended)
+        claudeCodeClient = new ClaudeCodeSDKClient(
+          {
+            apiKey: process.env.ANTHROPIC_API_KEY,
+            projectPath: mission.repository,
+            maxTurns: Math.min(config.orchestrator.max_iterations, 10), // SDK has turn limits
+            model: 'claude-3-5-sonnet-20241022', // Latest model
+            temperature: 0.3,
+            systemPrompt: `Working on mission: ${mission.title}`,
+            planMode: false, // Execute mode
+            jsonMode: false
+          },
+          logger
+        );
+      } else {
+        // Legacy client (for backward compatibility)
+        claudeCodeClient = new ClaudeCodeClient(
+          {
+            apiKey: process.env.ANTHROPIC_API_KEY,
+            useSubscription: config.claude_code?.use_subscription || false,
+            projectPath: mission.repository,
+            maxIterations: config.orchestrator.max_iterations,
+            model: 'claude-opus-4-1-20250805',
+            temperature: 0.3,
+            timeoutMs: 300000,
+            contextWindow: 200000
+          },
+          logger
+        );
+      }
       
       // Create orchestrator
       const orchestrator = new Orchestrator({

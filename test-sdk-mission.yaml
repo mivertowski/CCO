@@ -1,0 +1,22 @@
+mission:
+  title: "Test SDK Integration"
+  description: "Simple test to verify Claude Code SDK integration"
+  repository: "."
+  priority: "high"
+  
+  definition_of_done:
+    - id: "test-file"
+      description: "Create a test file with SDK integration confirmation"
+      type: "functional"
+      measurable: true
+      verification_method: "file_exists"
+      acceptance_criteria:
+        - "File 'sdk-test.txt' exists"
+        - "File contains 'SDK Integration Successful'"
+      priority: "high"
+      
+  phases:
+    - name: "test"
+      description: "Test phase"
+      dod_criteria: ["test-file"]
+      estimated_time: "5m"

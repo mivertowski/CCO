@@ -42,7 +42,9 @@ class Orchestrator {
                 throw new Error('Claude Code environment validation failed');
             }
             // Start Claude Code session
-            this.claudeCodeClient.startSession(this.currentSession.sessionId);
+            if (this.claudeCodeClient.startSession) {
+                this.claudeCodeClient.startSession(this.currentSession.sessionId);
+            }
             // Main orchestration loop
             while (!this.isComplete() && this.currentSession.iterations < this.maxIterations) {
                 await this.executeIteration();
@@ -54,7 +56,9 @@ class Orchestrator {
             // Final checkpoint
             await this.checkpoint();
             // End Claude Code session
-            this.claudeCodeClient.endSession();
+            if (this.claudeCodeClient.endSession) {
+                this.claudeCodeClient.endSession();
+            }
             // Prepare final result
             const finalResult = await this.prepareFinalResult();
             this.logger.info('Orchestration completed', {

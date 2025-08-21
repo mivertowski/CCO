@@ -2,7 +2,7 @@ import { Mission, DoDCriteria } from '../models/mission';
 import { SessionState, SessionPhase, Artifact, ArtifactType } from '../models/session';
 import { OrchestrationMetrics } from '../models/metrics';
 import { OpenRouterClient } from '../llm/openrouter-client';
-import { ClaudeCodeClient, ClaudeCodeResult } from '../llm/claude-code-client';
+import { IClaudeCodeClient, ClaudeCodeResult } from '../llm/claude-code-interface';
 import { ProgressTracker } from './progress-tracker';
 import { SessionManager } from './session-manager';
 import { ManagerLLM } from '../llm/manager-llm';
@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface OrchestratorConfig {
   mission: Mission;
   openRouterClient: OpenRouterClient;
-  claudeCodeClient: ClaudeCodeClient;
+  claudeCodeClient: IClaudeCodeClient;
   sessionManager: SessionManager;
   logger: winston.Logger;
   checkpointInterval?: number;
@@ -31,7 +31,7 @@ export interface OrchestrationResult {
 export class Orchestrator {
   private mission: Mission;
   private openRouterClient: OpenRouterClient;
-  private claudeCodeClient: ClaudeCodeClient;
+  private claudeCodeClient: IClaudeCodeClient;
   private sessionManager: SessionManager;
   private progressTracker: ProgressTracker;
   private managerLLM: ManagerLLM;
@@ -71,7 +71,9 @@ export class Orchestrator {
       }
 
       // Start Claude Code session
-      this.claudeCodeClient.startSession(this.currentSession.sessionId);
+      if (this.claudeCodeClient.startSession) {
+        this.claudeCodeClient.startSession(this.currentSession.sessionId);
+      }
 
       // Main orchestration loop
       while (!this.isComplete() && this.currentSession.iterations < this.maxIterations) {
@@ -87,7 +89,9 @@ export class Orchestrator {
       await this.checkpoint();
       
       // End Claude Code session
-      this.claudeCodeClient.endSession();
+      if (this.claudeCodeClient.endSession) {
+        this.claudeCodeClient.endSession();
+      }
 
       // Prepare final result
       const finalResult = await this.prepareFinalResult();

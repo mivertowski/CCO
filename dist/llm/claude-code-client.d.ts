@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { TokenMetrics } from '../models/metrics';
 import winston from 'winston';
+import { IClaudeCodeClient, ClaudeCodeResult as IClaudeCodeResult } from './claude-code-interface';
 export declare const ClaudeCodeConfigSchema: z.ZodObject<{
     apiKey: z.ZodOptional<z.ZodString>;
     useSubscription: z.ZodDefault<z.ZodBoolean>;
@@ -30,18 +30,7 @@ export declare const ClaudeCodeConfigSchema: z.ZodObject<{
     contextWindow?: number | undefined;
 }>;
 export type ClaudeCodeConfig = z.infer<typeof ClaudeCodeConfigSchema>;
-export interface ClaudeCodeResult {
-    success: boolean;
-    output: string;
-    artifacts: Array<{
-        path: string;
-        content: string;
-        type: string;
-    }>;
-    sessionEnded: boolean;
-    tokenUsage: TokenMetrics;
-    error?: string;
-}
+export type ClaudeCodeResult = IClaudeCodeResult;
 export interface ExecutionContext {
     workingDirectory: string;
     environment: Record<string, string>;
@@ -50,7 +39,7 @@ export interface ExecutionContext {
         content: string;
     }>;
 }
-export declare class ClaudeCodeClient {
+export declare class ClaudeCodeClient implements IClaudeCodeClient {
     private client;
     private config;
     private logger;

@@ -6,9 +6,14 @@ export interface MissionFile {
         repository: string;
         description: string;
         definition_of_done: Array<{
-            criteria: string;
+            id?: string;
+            criteria?: string;
+            description?: string;
             measurable?: boolean;
             priority: string;
+            type?: string;
+            verification_method?: string;
+            acceptance_criteria?: string[];
         }>;
         constraints?: string[];
         context?: string;

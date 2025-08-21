@@ -86,8 +86,8 @@ class MissionParser {
         const missionId = (0, uuid_1.v4)();
         const now = new Date();
         const dodCriteria = data.mission.definition_of_done.map((item, index) => ({
-            id: `${missionId}-dod-${index}`,
-            description: item.criteria,
+            id: item.id || `${missionId}-dod-${index}`,
+            description: item.description || item.criteria || '',
             measurable: item.measurable !== false,
             priority: this.parsePriority(item.priority),
             completed: false

@@ -42,10 +42,12 @@ declare const ConfigSchema: z.ZodObject<{
     claude_code: z.ZodObject<{
         api_key: z.ZodOptional<z.ZodString>;
         use_subscription: z.ZodDefault<z.ZodBoolean>;
+        use_sdk: z.ZodDefault<z.ZodBoolean>;
         workspace: z.ZodString;
         max_file_size: z.ZodDefault<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         use_subscription: boolean;
+        use_sdk: boolean;
         workspace: string;
         max_file_size: number;
         api_key?: string | undefined;
@@ -53,6 +55,7 @@ declare const ConfigSchema: z.ZodObject<{
         workspace: string;
         api_key?: string | undefined;
         use_subscription?: boolean | undefined;
+        use_sdk?: boolean | undefined;
         max_file_size?: number | undefined;
     }>;
     persistence: z.ZodObject<{
@@ -93,6 +96,7 @@ declare const ConfigSchema: z.ZodObject<{
     };
     claude_code: {
         use_subscription: boolean;
+        use_sdk: boolean;
         workspace: string;
         max_file_size: number;
         api_key?: string | undefined;
@@ -125,6 +129,7 @@ declare const ConfigSchema: z.ZodObject<{
         workspace: string;
         api_key?: string | undefined;
         use_subscription?: boolean | undefined;
+        use_sdk?: boolean | undefined;
         max_file_size?: number | undefined;
     };
     persistence: {

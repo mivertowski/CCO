@@ -58,6 +58,7 @@ const orchestrator_1 = require("../core/orchestrator");
 const session_manager_1 = require("../core/session-manager");
 const openrouter_client_1 = require("../llm/openrouter-client");
 const claude_code_client_1 = require("../llm/claude-code-client");
+const claude_code_sdk_client_1 = require("../llm/claude-code-sdk-client");
 const config_loader_1 = require("../config/config-loader");
 const inquirer_1 = __importDefault(require("inquirer"));
 // Load environment variables
@@ -134,6 +135,7 @@ program
     .description('Start orchestration with a mission')
     .option('-m, --mission <path>', 'Path to mission file', 'mission.yaml')
     .option('-c, --config <path>', 'Path to config file', '.cco/config.yaml')
+    .option('--use-sdk', 'Use Claude Code SDK for automation (recommended)')
     .option('--resume', 'Resume from last session')
     .action(async (options) => {
     const spinner = (0, ora_1.default)('Starting orchestration...').start();
@@ -173,16 +175,34 @@ program
             retryAttempts: 3,
             retryDelay: 1000
         }, logger);
-        const claudeCodeClient = new claude_code_client_1.ClaudeCodeClient({
-            apiKey: process.env.ANTHROPIC_API_KEY,
-            useSubscription: config.claude_code?.use_subscription || false,
-            projectPath: mission.repository,
-            maxIterations: config.orchestrator.max_iterations,
-            model: 'claude-opus-4-1-20250805',
-            temperature: 0.3,
-            timeoutMs: 300000,
-            contextWindow: 200000
-        }, logger);
+        // Choose between SDK and legacy client
+        let claudeCodeClient;
+        if (options.useSdk || config.claude_code?.use_sdk) {
+            // Use the new SDK client (recommended)
+            claudeCodeClient = new claude_code_sdk_client_1.ClaudeCodeSDKClient({
+                apiKey: process.env.ANTHROPIC_API_KEY,
+                projectPath: mission.repository,
+                maxTurns: Math.min(config.orchestrator.max_iterations, 10), // SDK has turn limits
+                model: 'claude-3-5-sonnet-20241022', // Latest model
+                temperature: 0.3,
+                systemPrompt: `Working on mission: ${mission.title}`,
+                planMode: false, // Execute mode
+                jsonMode: false
+            }, logger);
+        }
+        else {
+            // Legacy client (for backward compatibility)
+            claudeCodeClient = new claude_code_client_1.ClaudeCodeClient({
+                apiKey: process.env.ANTHROPIC_API_KEY,
+                useSubscription: config.claude_code?.use_subscription || false,
+                projectPath: mission.repository,
+                maxIterations: config.orchestrator.max_iterations,
+                model: 'claude-opus-4-1-20250805',
+                temperature: 0.3,
+                timeoutMs: 300000,
+                contextWindow: 200000
+            }, logger);
+        }
         // Create orchestrator
         const orchestrator = new orchestrator_1.Orchestrator({
             mission,

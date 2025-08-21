@@ -11,9 +11,14 @@ export interface MissionFile {
     repository: string;
     description: string;
     definition_of_done: Array<{
-      criteria: string;
+      id?: string;
+      criteria?: string;
+      description?: string;
       measurable?: boolean;
       priority: string;
+      type?: string;
+      verification_method?: string;
+      acceptance_criteria?: string[];
     }>;
     constraints?: string[];
     context?: string;
@@ -73,8 +78,8 @@ export class MissionParser {
     const now = new Date();
     
     const dodCriteria: DoDCriteria[] = data.mission.definition_of_done.map((item, index) => ({
-      id: `${missionId}-dod-${index}`,
-      description: item.criteria,
+      id: item.id || `${missionId}-dod-${index}`,
+      description: item.description || item.criteria || '',
       measurable: item.measurable !== false,
       priority: this.parsePriority(item.priority),
       completed: false

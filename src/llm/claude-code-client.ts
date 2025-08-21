@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { TokenMetrics } from '../models/metrics';
 import winston from 'winston';
+import { IClaudeCodeClient, ClaudeCodeResult as IClaudeCodeResult } from './claude-code-interface';
 
 export const ClaudeCodeConfigSchema = z.object({
   apiKey: z.string().optional(), // Optional for subscription users
@@ -16,18 +17,7 @@ export const ClaudeCodeConfigSchema = z.object({
 
 export type ClaudeCodeConfig = z.infer<typeof ClaudeCodeConfigSchema>;
 
-export interface ClaudeCodeResult {
-  success: boolean;
-  output: string;
-  artifacts: Array<{
-    path: string;
-    content: string;
-    type: string;
-  }>;
-  sessionEnded: boolean;
-  tokenUsage: TokenMetrics;
-  error?: string;
-}
+export type ClaudeCodeResult = IClaudeCodeResult;
 
 export interface ExecutionContext {
   workingDirectory: string;
@@ -35,7 +25,7 @@ export interface ExecutionContext {
   previousArtifacts: Array<{ path: string; content: string }>;
 }
 
-export class ClaudeCodeClient {
+export class ClaudeCodeClient implements IClaudeCodeClient {
   private client: Anthropic;
   private config: ClaudeCodeConfig;
   private logger: winston.Logger;

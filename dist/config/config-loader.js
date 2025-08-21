@@ -57,6 +57,7 @@ const ConfigSchema = zod_1.z.object({
     claude_code: zod_1.z.object({
         api_key: zod_1.z.string().optional(),
         use_subscription: zod_1.z.boolean().default(false),
+        use_sdk: zod_1.z.boolean().default(true), // Use SDK by default for better automation
         workspace: zod_1.z.string(),
         max_file_size: zod_1.z.number().default(100000)
     }),
