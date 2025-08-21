@@ -1,5 +1,15 @@
 #!/usr/bin/env node
 
+// Suppress NODE_TLS_REJECT_UNAUTHORIZED warning if it exists
+if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+  process.removeAllListeners('warning');
+  process.on('warning', (warning) => {
+    if (!warning.message.includes('NODE_TLS_REJECT_UNAUTHORIZED')) {
+      console.warn(warning);
+    }
+  });
+}
+
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
 import chalk from 'chalk';

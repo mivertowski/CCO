@@ -16,7 +16,8 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [
     "claude",
@@ -53,7 +54,6 @@
     "js-yaml": "^4.1.0",
     "openai": "^4.28.0",
     "ora": "^8.0.1",
-    "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20",
     "uuid": "^9.0.1",
     "winston": "^3.11.0",

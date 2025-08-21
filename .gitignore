@@ -9,8 +9,8 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
-# Build output
-dist/
+# Build output (commented out dist for GitHub npx support)
+# dist/
 dist-ssr/
 build/
 out/
