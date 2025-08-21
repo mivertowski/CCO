@@ -4,7 +4,8 @@
   "description": "Automated orchestration system for managing Claude Code instances to complete complex tasks",
   "main": "dist/index.js",
   "bin": {
-    "cco": "dist/cli/index.js"
+    "cco": "dist/cli/index.js",
+    "claude-code-orchestrator": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,10 +23,27 @@
     "orchestration",
     "automation",
     "ai",
-    "llm"
+    "llm",
+    "openrouter",
+    "claude-code",
+    "definition-of-done",
+    "task-automation"
   ],
-  "author": "",
+  "author": "mivertowski",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mivertowski/cco.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mivertowski/cco/issues"
+  },
+  "homepage": "https://github.com/mivertowski/cco#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
     "chalk": "^5.3.0",
@@ -50,6 +68,7 @@
     "@typescript-eslint/parser": "^7.0.2",
     "@vitest/coverage-v8": "^1.3.1",
     "eslint": "^8.57.0",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "vitest": "^1.3.1"

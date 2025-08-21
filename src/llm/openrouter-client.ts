@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
-import { TokenMetrics } from '@models/metrics';
+import { TokenMetrics } from '../models/metrics';
 import winston from 'winston';
 
 export const OpenRouterConfigSchema = z.object({

@@ -21,17 +21,7 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@core/*": ["src/core/*"],
-      "@llm/*": ["src/llm/*"],
-      "@models/*": ["src/models/*"],
-      "@persistence/*": ["src/persistence/*"],
-      "@handlers/*": ["src/handlers/*"],
-      "@monitoring/*": ["src/monitoring/*"],
-      "@config/*": ["config/*"]
-    }
+    "baseUrl": "./src"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "**/*.test.ts", "**/*.spec.ts"]

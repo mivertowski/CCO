@@ -23,6 +23,19 @@ An automated orchestration system that manages Claude Code instances to complete
 
 ## 🛠️ Installation
 
+### Quick Start with npx (No Installation)
+
+```bash
+# Run directly without installing
+npx claude-code-orchestrator init
+npx claude-code-orchestrator start --mission mission.yaml
+
+# Or from GitHub directly
+npx github:mivertowski/cco init
+```
+
+### Traditional Installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/mivertowski/cco.git

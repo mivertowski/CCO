@@ -1,5 +1,5 @@
-import { Mission, DoDCriteria, DoDPriority, MissionProgress } from '@models/mission';
-import { SessionState } from '@models/session';
+import { Mission, DoDCriteria, DoDPriority, MissionProgress } from '../models/mission';
+import { SessionState } from '../models/session';
 import winston from 'winston';
 
 export class ProgressTracker {

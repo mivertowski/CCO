@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { Mission, MissionSchema, DoDCriteria, DoDPriority } from '@models/mission';
+import { Mission, MissionSchema, DoDCriteria, DoDPriority } from '../models/mission';
 import { v4 as uuidv4 } from 'uuid';
 import winston from 'winston';
 

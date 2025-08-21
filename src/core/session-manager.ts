@@ -1,4 +1,4 @@
-import { SessionState, SessionPhase, Artifact, SessionError, SessionManager as ISessionManager } from '@models/session';
+import { SessionState, SessionPhase, Artifact, SessionError, SessionManager as ISessionManager } from '../models/session';
 import { v4 as uuidv4 } from 'uuid';
 import winston from 'winston';
 import * as fs from 'fs/promises';

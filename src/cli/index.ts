@@ -6,13 +6,13 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { createLogger } from '@monitoring/logger';
-import { MissionParser } from '@core/mission-parser';
-import { Orchestrator } from '@core/orchestrator';
-import { SessionManager } from '@core/session-manager';
-import { OpenRouterClient } from '@llm/openrouter-client';
-import { ClaudeCodeClient } from '@llm/claude-code-client';
-import { loadConfig } from '@/config/config-loader';
+import { createLogger } from '../monitoring/logger';
+import { MissionParser } from '../core/mission-parser';
+import { Orchestrator } from '../core/orchestrator';
+import { SessionManager } from '../core/session-manager';
+import { OpenRouterClient } from '../llm/openrouter-client';
+import { ClaudeCodeClient } from '../llm/claude-code-client';
+import { loadConfig } from '../config/config-loader';
 import inquirer from 'inquirer';
 
 // Load environment variables

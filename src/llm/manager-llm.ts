@@ -1,6 +1,6 @@
 import { OpenRouterClient } from './openrouter-client';
-import { Mission, DoDCriteria, MissionProgress } from '@models/mission';
-import { SessionState } from '@models/session';
+import { Mission, DoDCriteria, MissionProgress } from '../models/mission';
+import { SessionState } from '../models/session';
 import { ClaudeCodeResult } from './claude-code-client';
 import winston from 'winston';
 

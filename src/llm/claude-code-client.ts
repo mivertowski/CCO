@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { TokenMetrics } from '@models/metrics';
+import { TokenMetrics } from '../models/metrics';
 import winston from 'winston';
 
 export const ClaudeCodeConfigSchema = z.object({
