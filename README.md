@@ -147,8 +147,11 @@ mission:
 - `deepseek/deepseek-r1` - Advanced reasoning model
 
 ### Claude Code Modes
-- **API Mode**: Uses Anthropic API key for programmatic access
-- **Subscription Mode**: Uses your Claude Code subscription (no API key needed)
+- **API Mode**: Full automation using Anthropic API key
+- **Subscription Mode**: Manual execution mode (no API key needed)
+  - Environment validation bypassed (always returns true)
+  - Provides task instructions for manual execution in Claude Code
+  - Useful for testing and development with Claude Code subscription
 
 ## 🚀 Usage
 

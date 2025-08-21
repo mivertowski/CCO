@@ -70,8 +70,46 @@ export class ClaudeCodeClient {
       this.logger.info('Executing Claude Code task', {
         task: task.substring(0, 100),
         projectPath: this.config.projectPath,
-        session: this.currentSession
+        session: this.currentSession,
+        useSubscription: this.config.useSubscription
       });
+
+      // Subscription mode - simulate execution
+      // In a real implementation, this would interface with the Claude Code instance
+      if (this.config.useSubscription) {
+        this.logger.info('Executing in subscription mode - manual Claude Code interaction required');
+        
+        // Return a placeholder result indicating manual intervention needed
+        return {
+          success: true,
+          output: `[SUBSCRIPTION MODE]
+This task requires manual execution in Claude Code:
+
+TASK: ${task}
+
+INSTRUCTIONS:
+1. Open Claude Code in your browser
+2. Navigate to project: ${this.config.projectPath}
+3. Execute the following task:
+   ${task}
+4. Once complete, update the session state manually
+
+Note: Full automation requires API mode with an API key.`,
+          artifacts: [],
+          sessionEnded: false,
+          tokenUsage: {
+            promptTokens: 0,
+            completionTokens: 0,
+            totalTokens: 0,
+            estimatedCost: 0
+          }
+        };
+      }
+
+      // API mode execution
+      if (!this.client) {
+        throw new Error('No Claude client available for execution');
+      }
 
       const systemPrompt = this.buildSystemPrompt(context);
       const userPrompt = this.buildUserPrompt(task, context);
@@ -117,8 +155,22 @@ export class ClaudeCodeClient {
   async validateEnvironment(): Promise<boolean> {
     try {
       this.logger.debug('Validating Claude Code environment', {
-        projectPath: this.config.projectPath
+        projectPath: this.config.projectPath,
+        useSubscription: this.config.useSubscription
       });
+
+      // In subscription mode, assume environment is valid
+      // since Claude Code is running via subscription
+      if (this.config.useSubscription) {
+        this.logger.info('Claude Code subscription mode - environment assumed valid');
+        return true;
+      }
+
+      // API mode validation
+      if (!this.client) {
+        this.logger.error('No Claude client available for validation');
+        return false;
+      }
 
       const testResponse = await this.client.messages.create({
         model: this.config.model,

@@ -63,6 +63,27 @@ claude_code:
   workspace: "."
 ```
 
+### Claude Code Subscription Mode Limitations
+
+**Problem**: Tasks show as "manual execution required" in subscription mode.
+
+**Solution**: This is expected behavior. Subscription mode currently:
+- Bypasses environment validation (always returns true)
+- Returns instructions for manual execution in Claude Code
+- Does not automate the actual code execution
+
+For full automation, you need:
+```yaml
+claude_code:
+  use_subscription: false
+  api_key: ${ANTHROPIC_API_KEY}
+```
+
+Subscription mode is useful for:
+- Testing orchestration logic without API costs
+- Semi-automated workflows where you execute in Claude Code manually
+- Development and debugging
+
 ### Permission Denied Errors
 
 **Problem**: Permission errors when running CCO commands.
