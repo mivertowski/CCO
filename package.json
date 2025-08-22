@@ -1,5 +1,5 @@
 {
-  "name": "claude-code-orchestrator",
+  "name": "@mivertowski/claude-code-orchestrator",
   "version": "1.0.0",
   "description": "Automated orchestration system for managing Claude Code instances to complete complex tasks",
   "main": "dist/index.js",
