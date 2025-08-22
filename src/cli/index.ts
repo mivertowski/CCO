@@ -347,4 +347,158 @@ program
     // TODO: Implement dashboard
   });
 
+program
+  .command('github')
+  .description('Execute mission from GitHub issue')
+  .requiredOption('-i, --issue <number>', 'GitHub issue number', parseInt)
+  .option('-r, --repository <repo>', 'Repository (owner/repo format)')
+  .option('-t, --token <token>', 'GitHub token (or use GITHUB_TOKEN env)')
+  .option('--create-pr', 'Create pull request after completion', false)
+  .option('--semantic-commits', 'Use semantic commit messages', false)
+  .option('--base-branch <branch>', 'Base branch for PR', 'main')
+  .action(async (options) => {
+    const spinner = ora('Initializing GitHub integration...').start();
+    
+    try {
+      // Import GitHub integration components
+      const { GitHubOrchestrator } = await import('../integrations/github/github-orchestrator');
+      
+      // Parse repository from option or config
+      let owner: string, repo: string;
+      if (options.repository) {
+        const parts = options.repository.split('/');
+        if (parts.length !== 2) {
+          throw new Error('Repository must be in owner/repo format');
+        }
+        [owner, repo] = parts;
+      } else {
+        // Try to get from git remote
+        const { exec } = await import('child_process');
+        const { promisify } = await import('util');
+        const execAsync = promisify(exec);
+        
+        try {
+          const { stdout } = await execAsync('git remote get-url origin');
+          const match = stdout.match(/github\.com[:/](.+?)\/(.+?)(\.git)?$/);
+          if (match) {
+            owner = match[1];
+            repo = match[2];
+          } else {
+            throw new Error('Could not parse GitHub repository from remote');
+          }
+        } catch {
+          throw new Error('Repository not specified and could not detect from git remote');
+        }
+      }
+      
+      // Get GitHub token
+      const token = options.token || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+      if (!token) {
+        spinner.warn('No GitHub token found, will attempt to use GitHub CLI');
+      }
+      
+      spinner.text = `Fetching issue #${options.issue} from ${owner}/${repo}...`;
+      
+      // Create GitHub orchestrator
+      const githubOrchestrator = new GitHubOrchestrator(
+        {
+          owner,
+          repo,
+          token,
+          createPR: options.createPr,
+          semanticCommits: options.semanticCommits,
+          baseBranch: options.baseBranch,
+        },
+        baseLogger
+      );
+      
+      // Convert issue to mission
+      const mission = await githubOrchestrator.createMissionFromIssue(options.issue);
+      
+      spinner.succeed(`Created mission from issue #${options.issue}: ${mission.title}`);
+      console.log(chalk.gray(`Description: ${mission.description}`));
+      console.log(chalk.gray(`DoD Criteria: ${mission.definitionOfDone.length} items`));
+      
+      // Load config
+      const config = await loadConfig('.cco/config.yaml');
+      
+      // Initialize session manager
+      const sessionManager = new SessionManager('.cco/sessions', baseLogger);
+      
+      // Initialize LLM clients
+      let openRouterClient = null;
+      let claudeCodeClient = null;
+      
+      // Always initialize both clients for GitHub integration
+      if (process.env.OPENROUTER_API_KEY) {
+        openRouterClient = new OpenRouterClient(
+          {
+            apiKey: process.env.OPENROUTER_API_KEY,
+            model: config.openrouter?.model || 'claude-3-opus',
+            temperature: config.openrouter?.temperature || 0.7,
+            maxTokens: 100000,
+            baseURL: 'https://openrouter.ai/api/v1',
+            retryAttempts: 3,
+            retryDelay: 1000
+          },
+          baseLogger
+        );
+      }
+      
+      if (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription) {
+        claudeCodeClient = new ClaudeCodeSDKClient(
+          {
+            apiKey: process.env.ANTHROPIC_API_KEY,
+            model: 'claude-opus-4-1-20250805',
+            temperature: 0.3,
+            projectPath: mission.repository,
+            maxTurns: config.orchestrator.max_iterations,
+            planMode: false,
+            jsonMode: false
+          },
+          baseLogger
+        );
+      }
+      
+      // Create orchestrator
+      const orchestrator = new Orchestrator({
+        mission,
+        openRouterClient: openRouterClient!,
+        claudeCodeClient: claudeCodeClient as IClaudeCodeClient,
+        sessionManager,
+        logger: logger,
+        checkpointInterval: config.orchestrator.checkpoint_interval,
+        maxIterations: config.orchestrator.max_iterations,
+        interactive: process.stdout.isTTY,
+        enableTelemetry: config.monitoring?.enable_telemetry
+      });
+      
+      // Start orchestration
+      console.log(chalk.cyan('\n🚀 Starting GitHub issue orchestration...\n'));
+      
+      const result = await orchestrator.orchestrate();
+      
+      if (result.success) {
+        console.log(chalk.green('\n✅ Mission completed successfully!'));
+        
+        // Create PR if requested
+        if (options.createPr) {
+          spinner.start('Creating pull request...');
+          const prUrl = await githubOrchestrator.createPRFromMission(mission, result);
+          spinner.succeed(`Pull request created: ${prUrl}`);
+        }
+      } else {
+        console.log(chalk.yellow('\n⚠️ Mission partially completed'));
+        console.log(chalk.gray(`Progress: ${result.metrics.completionPercentage}%`));
+      }
+      
+    } catch (error) {
+      spinner.fail('GitHub orchestration failed');
+      const ccoError = ErrorHandler.handle(error);
+      logger.error('GitHub orchestration failed', ccoError);
+      console.error(ErrorHandler.format(ccoError));
+      process.exit(1);
+    }
+  });
+
 program.parse(process.argv);
