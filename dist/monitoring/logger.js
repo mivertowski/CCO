@@ -63,7 +63,7 @@ var LogContext;
  * Custom format for pretty console output
  */
 const prettyConsoleFormat = winston_1.default.format.printf((info) => {
-    const { level, message, timestamp, context, ...metadata } = info;
+    const { level: _level, message, timestamp, context, ...metadata } = info;
     const time = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
     const contextStr = context ? chalk_1.default.cyan(`[${context}]`) : '';
     let output = `${chalk_1.default.gray(time)} ${contextStr} ${message}`;

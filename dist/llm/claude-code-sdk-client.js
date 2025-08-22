@@ -203,7 +203,7 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
     }
     handleMessage(message, result) {
         switch (message.type) {
-            case 'result':
+            case 'result': {
                 const resultMsg = message;
                 // Handle result based on subtype
                 if (resultMsg.subtype === 'success') {
@@ -224,6 +224,7 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
                     };
                 }
                 break;
+            }
             case 'assistant':
                 // Assistant messages contain the actual work being done
                 if (message.message?.content) {
