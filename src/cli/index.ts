@@ -350,18 +350,24 @@ program
 program
   .command('github')
   .description('Execute mission from GitHub issue')
-  .requiredOption('-i, --issue <number>', 'GitHub issue number', parseInt)
+  .option('-i, --issue <number>', 'GitHub issue number', parseInt)
   .option('-r, --repository <repo>', 'Repository (owner/repo format)')
   .option('-t, --token <token>', 'GitHub token (or use GITHUB_TOKEN env)')
   .option('--create-pr', 'Create pull request after completion', false)
   .option('--semantic-commits', 'Use semantic commit messages', false)
   .option('--base-branch <branch>', 'Base branch for PR', 'main')
+  .option('--interactive', 'Interactive issue selection mode', false)
+  .option('--auto', 'Automated mode - process issues by priority', false)
+  .option('--poll-interval <minutes>', 'Polling interval for auto mode (minutes)', parseInt, 30)
+  .option('--labels <labels>', 'Filter issues by labels (comma-separated)')
+  .option('--max-issues <count>', 'Maximum issues to process in auto mode', parseInt, 5)
   .action(async (options) => {
     const spinner = ora('Initializing GitHub integration...').start();
     
     try {
       // Import GitHub integration components
       const { GitHubOrchestrator } = await import('../integrations/github/github-orchestrator');
+      const { GitHubClient } = await import('../integrations/github/github-client');
       
       // Parse repository from option or config
       let owner: string, repo: string;
@@ -397,99 +403,261 @@ program
         spinner.warn('No GitHub token found, will attempt to use GitHub CLI');
       }
       
-      spinner.text = `Fetching issue #${options.issue} from ${owner}/${repo}...`;
+      // Handle different modes
+      let issuesToProcess: number[] = [];
       
-      // Create GitHub orchestrator
-      const githubOrchestrator = new GitHubOrchestrator(
-        {
-          owner,
-          repo,
-          token,
-          createPR: options.createPr,
-          semanticCommits: options.semanticCommits,
-          baseBranch: options.baseBranch,
-        },
-        baseLogger
-      );
-      
-      // Convert issue to mission
-      const mission = await githubOrchestrator.createMissionFromIssue(options.issue);
-      
-      spinner.succeed(`Created mission from issue #${options.issue}: ${mission.title}`);
-      console.log(chalk.gray(`Description: ${mission.description}`));
-      console.log(chalk.gray(`DoD Criteria: ${mission.definitionOfDone.length} items`));
-      
-      // Load config
-      const config = await loadConfig('.cco/config.yaml');
-      
-      // Initialize session manager
-      const sessionManager = new SessionManager('.cco/sessions', baseLogger);
-      
-      // Initialize LLM clients
-      let openRouterClient = null;
-      let claudeCodeClient = null;
-      
-      // Always initialize both clients for GitHub integration
-      if (process.env.OPENROUTER_API_KEY) {
-        openRouterClient = new OpenRouterClient(
-          {
-            apiKey: process.env.OPENROUTER_API_KEY,
-            model: config.openrouter?.model || 'claude-3-opus',
-            temperature: config.openrouter?.temperature || 0.7,
-            maxTokens: 100000,
-            baseURL: 'https://openrouter.ai/api/v1',
-            retryAttempts: 3,
-            retryDelay: 1000
-          },
-          baseLogger
-        );
-      }
-      
-      if (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription) {
-        claudeCodeClient = new ClaudeCodeSDKClient(
-          {
-            apiKey: process.env.ANTHROPIC_API_KEY,
-            model: 'claude-opus-4-1-20250805',
-            temperature: 0.3,
-            projectPath: mission.repository,
-            maxTurns: config.orchestrator.max_iterations,
-            planMode: false,
-            jsonMode: false
-          },
-          baseLogger
-        );
-      }
-      
-      // Create orchestrator
-      const orchestrator = new Orchestrator({
-        mission,
-        openRouterClient: openRouterClient!,
-        claudeCodeClient: claudeCodeClient as IClaudeCodeClient,
-        sessionManager,
-        logger: logger,
-        checkpointInterval: config.orchestrator.checkpoint_interval,
-        maxIterations: config.orchestrator.max_iterations,
-        interactive: process.stdout.isTTY,
-        enableTelemetry: config.monitoring?.enable_telemetry
-      });
-      
-      // Start orchestration
-      console.log(chalk.cyan('\n🚀 Starting GitHub issue orchestration...\n'));
-      
-      const result = await orchestrator.orchestrate();
-      
-      if (result.success) {
-        console.log(chalk.green('\n✅ Mission completed successfully!'));
+      if (options.interactive) {
+        // Interactive mode - let user select issues
+        spinner.text = 'Fetching open issues...';
         
-        // Create PR if requested
-        if (options.createPr) {
-          spinner.start('Creating pull request...');
-          const prUrl = await githubOrchestrator.createPRFromMission(mission, result);
-          spinner.succeed(`Pull request created: ${prUrl}`);
+        const githubClient = new GitHubClient(
+          { owner, repo, token },
+          baseLogger
+        );
+        
+        const labelFilter = options.labels ? options.labels.split(',').map((l: string) => l.trim()) : undefined;
+        const issues = await githubClient.listIssues({
+          state: 'open',
+          labels: labelFilter,
+          sort: 'created',
+          direction: 'desc'
+        });
+        
+        if (issues.length === 0) {
+          spinner.fail('No open issues found');
+          return;
         }
+        
+        spinner.stop();
+        
+        // Sort issues by priority (based on labels)
+        const prioritizedIssues = issues.sort((a, b) => {
+          const getPriority = (issue: any) => {
+            const labels = issue.labels.map((l: any) => l.name.toLowerCase());
+            if (labels.includes('priority:critical') || labels.includes('p0')) return 0;
+            if (labels.includes('priority:high') || labels.includes('p1')) return 1;
+            if (labels.includes('priority:medium') || labels.includes('p2')) return 2;
+            if (labels.includes('priority:low') || labels.includes('p3')) return 3;
+            return 4;
+          };
+          return getPriority(a) - getPriority(b);
+        });
+        
+        // Display issues with formatting
+        console.log(chalk.blue('\n📋 Open Issues:\n'));
+        const choices = prioritizedIssues.map(issue => {
+          const labels = issue.labels.map((l: any) => l.name).join(', ');
+          const priority = labels.includes('critical') || labels.includes('p0') ? '🔴' :
+                          labels.includes('high') || labels.includes('p1') ? '🟠' :
+                          labels.includes('medium') || labels.includes('p2') ? '🟡' :
+                          labels.includes('low') || labels.includes('p3') ? '🟢' : '⚪';
+          
+          return {
+            name: `${priority} #${issue.number}: ${issue.title}${labels ? chalk.gray(` [${labels}]`) : ''}`,
+            value: issue.number,
+            short: `#${issue.number}`
+          };
+        });
+        
+        const answers = await inquirer.prompt([
+          {
+            type: 'checkbox',
+            name: 'selectedIssues',
+            message: 'Select issues to process (space to select, enter to confirm):',
+            choices,
+            validate: (input) => input.length > 0 || 'Please select at least one issue'
+          }
+        ]);
+        
+        issuesToProcess = answers.selectedIssues;
+        
+      } else if (options.auto) {
+        // Automated mode - process issues by priority continuously
+        console.log(chalk.cyan('\n🤖 Starting automated issue processing...\n'));
+        console.log(chalk.gray(`Polling interval: ${options.pollInterval} minutes`));
+        console.log(chalk.gray(`Max issues per run: ${options.maxIssues}`));
+        if (options.labels) {
+          console.log(chalk.gray(`Label filter: ${options.labels}`));
+        }
+        
+        const processIssuesBatch = async () => {
+          spinner.start('Checking for new issues...');
+          
+          const githubClient = new GitHubClient(
+            { owner, repo, token },
+            baseLogger
+          );
+          
+          const labelFilter = options.labels ? options.labels.split(',').map((l: string) => l.trim()) : undefined;
+          const issues = await githubClient.listIssues({
+            state: 'open',
+            labels: labelFilter,
+            sort: 'created',
+            direction: 'desc',
+            limit: options.maxIssues
+          });
+          
+          if (issues.length === 0) {
+            spinner.info('No open issues found');
+            return [];
+          }
+          
+          // Sort by priority
+          const prioritizedIssues = issues.sort((a, b) => {
+            const getPriority = (issue: any) => {
+              const labels = issue.labels.map((l: any) => l.name.toLowerCase());
+              if (labels.includes('priority:critical') || labels.includes('p0')) return 0;
+              if (labels.includes('priority:high') || labels.includes('p1')) return 1;
+              if (labels.includes('priority:medium') || labels.includes('p2')) return 2;
+              if (labels.includes('priority:low') || labels.includes('p3')) return 3;
+              return 4;
+            };
+            return getPriority(a) - getPriority(b);
+          });
+          
+          spinner.succeed(`Found ${prioritizedIssues.length} issues to process`);
+          return prioritizedIssues.slice(0, options.maxIssues).map(i => i.number);
+        };
+        
+        // Initial batch
+        issuesToProcess = await processIssuesBatch();
+        
+        // Set up polling for continuous processing
+        if (options.pollInterval > 0) {
+          setInterval(async () => {
+            console.log(chalk.cyan(`\n⏰ Checking for new issues (next check in ${options.pollInterval} minutes)...\n`));
+            const newIssues = await processIssuesBatch();
+            if (newIssues.length > 0) {
+              // Process new batch
+              for (const issueNum of newIssues) {
+                await processIssue(issueNum);
+              }
+            }
+          }, options.pollInterval * 60 * 1000);
+        }
+        
+      } else if (options.issue) {
+        // Single issue mode
+        issuesToProcess = [options.issue];
       } else {
-        console.log(chalk.yellow('\n⚠️ Mission partially completed'));
-        console.log(chalk.gray(`Progress: ${result.metrics.completionPercentage}%`));
+        throw new Error('Please specify an issue number (-i), use interactive mode (--interactive), or automated mode (--auto)');
+      }
+      
+      // Function to process a single issue
+      const processIssue = async (issueNumber: number) => {
+        try {
+          spinner.start(`Processing issue #${issueNumber}...`);
+          
+          // Create GitHub orchestrator
+          const githubOrchestrator = new GitHubOrchestrator(
+            {
+              owner,
+              repo,
+              token,
+              createPR: options.createPr,
+              semanticCommits: options.semanticCommits,
+              baseBranch: options.baseBranch,
+            },
+            baseLogger
+          );
+          
+          // Convert issue to mission
+          const mission = await githubOrchestrator.createMissionFromIssue(issueNumber);
+          
+          spinner.succeed(`Created mission from issue #${issueNumber}: ${mission.title}`);
+          console.log(chalk.gray(`Description: ${mission.description}`));
+          console.log(chalk.gray(`DoD Criteria: ${mission.definitionOfDone.length} items`));
+          
+          // Load config
+          const config = await loadConfig('.cco/config.yaml');
+          
+          // Initialize session manager
+          const sessionManager = new SessionManager('.cco/sessions', baseLogger);
+          
+          // Initialize LLM clients
+          let openRouterClient = null;
+          let claudeCodeClient = null;
+          
+          // Always initialize both clients for GitHub integration
+          if (process.env.OPENROUTER_API_KEY) {
+            openRouterClient = new OpenRouterClient(
+              {
+                apiKey: process.env.OPENROUTER_API_KEY,
+                model: config.openrouter?.model || 'claude-3-opus',
+                temperature: config.openrouter?.temperature || 0.7,
+                maxTokens: 100000,
+                baseURL: 'https://openrouter.ai/api/v1',
+                retryAttempts: 3,
+                retryDelay: 1000
+              },
+              baseLogger
+            );
+          }
+          
+          if (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription) {
+            claudeCodeClient = new ClaudeCodeSDKClient(
+              {
+                apiKey: process.env.ANTHROPIC_API_KEY,
+                model: 'claude-opus-4-1-20250805',
+                temperature: 0.3,
+                projectPath: mission.repository,
+                maxTurns: config.orchestrator.max_iterations,
+                planMode: false,
+                jsonMode: false
+              },
+              baseLogger
+            );
+          }
+          
+          // Create orchestrator
+          const orchestrator = new Orchestrator({
+            mission,
+            openRouterClient: openRouterClient!,
+            claudeCodeClient: claudeCodeClient as IClaudeCodeClient,
+            sessionManager,
+            logger: logger,
+            checkpointInterval: config.orchestrator.checkpoint_interval,
+            maxIterations: config.orchestrator.max_iterations,
+            interactive: process.stdout.isTTY,
+            enableTelemetry: config.monitoring?.enable_telemetry
+          });
+          
+          // Start orchestration
+          console.log(chalk.cyan(`\n🚀 Starting orchestration for issue #${issueNumber}...\n`));
+          
+          const result = await orchestrator.orchestrate();
+          
+          if (result.success) {
+            console.log(chalk.green(`\n✅ Issue #${issueNumber} completed successfully!`));
+            
+            // Create PR if requested
+            if (options.createPr) {
+              spinner.start('Creating pull request...');
+              const prUrl = await githubOrchestrator.createPRFromMission(mission, result);
+              spinner.succeed(`Pull request created: ${prUrl}`);
+            }
+          } else {
+            console.log(chalk.yellow(`\n⚠️ Issue #${issueNumber} partially completed`));
+            console.log(chalk.gray(`Progress: ${result.metrics.completionPercentage}%`));
+          }
+          
+          return result.success;
+        } catch (error) {
+          spinner.fail(`Failed to process issue #${issueNumber}`);
+          console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`));
+          return false;
+        }
+      };
+      
+      // Process all selected issues
+      let successCount = 0;
+      for (const issueNum of issuesToProcess) {
+        const success = await processIssue(issueNum);
+        if (success) successCount++;
+      }
+      
+      if (issuesToProcess.length > 1) {
+        console.log(chalk.blue(`\n📊 Summary: ${successCount}/${issuesToProcess.length} issues completed successfully`));
       }
       
     } catch (error) {

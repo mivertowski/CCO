@@ -139,6 +139,61 @@ class GitHubClient {
             throw error;
         }
     }
+    async listIssues(options) {
+        try {
+            const state = options?.state || 'open';
+            const sort = options?.sort || 'created';
+            const direction = options?.direction || 'desc';
+            const limit = options?.limit || 30;
+            if (this.useGHCLI) {
+                let cmd = `gh issue list --repo ${this.config.owner}/${this.config.repo} --json number,title,body,state,labels,author,createdAt,url --limit ${limit}`;
+                if (state !== 'all') {
+                    cmd += ` --state ${state}`;
+                }
+                if (options?.labels && options.labels.length > 0) {
+                    cmd += ` --label ${options.labels.join(',')}`;
+                }
+                const { stdout } = await exec(cmd);
+                const issues = JSON.parse(stdout);
+                return issues.map((issue) => ({
+                    number: issue.number,
+                    title: issue.title,
+                    body: issue.body || '',
+                    state: issue.state,
+                    labels: issue.labels.map((l) => ({ name: l.name })),
+                    user: { login: issue.author?.login || 'unknown' },
+                    created_at: issue.createdAt,
+                    html_url: issue.url,
+                }));
+            }
+            if (!this.octokit) {
+                throw new Error('GitHub client not initialized');
+            }
+            const { data } = await this.octokit.issues.listForRepo({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                state,
+                labels: options?.labels?.join(','),
+                sort,
+                direction,
+                per_page: limit,
+            });
+            return data.map((issue) => ({
+                number: issue.number,
+                title: issue.title,
+                body: issue.body || '',
+                state: issue.state,
+                labels: issue.labels.map((l) => ({ name: typeof l === 'string' ? l : l.name })),
+                user: { login: issue.user?.login || 'unknown' },
+                created_at: issue.created_at,
+                html_url: issue.html_url,
+            }));
+        }
+        catch (error) {
+            this.logger.error('Failed to list issues', { error });
+            throw error;
+        }
+    }
     async getIssue(issueNumber) {
         try {
             if (this.useGHCLI) {

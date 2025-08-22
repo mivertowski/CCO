@@ -53,6 +53,13 @@ export declare class GitHubClient {
         html_url: string;
     }>;
     private createPRWithCLI;
+    listIssues(options?: {
+        state?: 'open' | 'closed' | 'all';
+        labels?: string[];
+        sort?: 'created' | 'updated' | 'comments';
+        direction?: 'asc' | 'desc';
+        limit?: number;
+    }): Promise<IssueData[]>;
     getIssue(issueNumber: number): Promise<IssueData>;
     createIssueComment(issueNumber: number, body: string): Promise<void>;
     listLabels(): Promise<string[]>;
