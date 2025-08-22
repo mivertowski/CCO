@@ -66,8 +66,10 @@ const ConfigSchema = zod_1.z.object({
         path: zod_1.z.string().default('.cco/sessions')
     }),
     monitoring: zod_1.z.object({
-        log_level: zod_1.z.string().default('INFO'),
-        log_path: zod_1.z.string().default('.cco/logs')
+        log_level: zod_1.z.string().default('info'),
+        log_path: zod_1.z.string().default('.cco/logs'),
+        enable_telemetry: zod_1.z.boolean().default(false),
+        enable_perf_logs: zod_1.z.boolean().default(false)
     })
 });
 async function loadConfig(configPath) {

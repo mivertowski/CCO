@@ -30,8 +30,10 @@ const ConfigSchema = z.object({
     path: z.string().default('.cco/sessions')
   }),
   monitoring: z.object({
-    log_level: z.string().default('INFO'),
-    log_path: z.string().default('.cco/logs')
+    log_level: z.string().default('info'),
+    log_path: z.string().default('.cco/logs'),
+    enable_telemetry: z.boolean().default(false),
+    enable_perf_logs: z.boolean().default(false)
   })
 });
 

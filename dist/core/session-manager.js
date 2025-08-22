@@ -65,13 +65,16 @@ class SessionManager {
             repository,
             ccInstanceId,
             currentPhase: session_1.SessionPhase.INITIALIZATION,
+            phase: session_1.SessionPhase.INITIALIZATION,
             completedTasks: [],
             pendingTasks: [],
+            completedDoDCriteria: [],
             artifacts: [],
             logs: [],
             errors: [],
             iterations: 0,
-            timestamp: new Date()
+            timestamp: new Date(),
+            phaseHistory: []
         };
         this.sessions.set(sessionId, session);
         await this.saveSession(session);

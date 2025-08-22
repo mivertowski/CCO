@@ -60,15 +60,18 @@ export const SessionStateSchema = z.object({
   repository: z.string(),
   ccInstanceId: z.string(),
   currentPhase: z.nativeEnum(SessionPhase),
+  phase: z.nativeEnum(SessionPhase).optional(), // Alias for currentPhase
   completedTasks: z.array(z.string()),
   pendingTasks: z.array(z.string()),
+  completedDoDCriteria: z.array(z.string()).default([]), // Track completed DoD criteria
   artifacts: z.array(ArtifactSchema),
   logs: z.array(LogEntrySchema),
   errors: z.array(ErrorSchema),
   iterations: z.number().default(0),
   timestamp: z.date(),
   lastCheckpoint: z.date().optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.any()).optional(),
+  phaseHistory: z.array(z.string()).optional() // Track phase transitions
 });
 
 export type SessionState = z.infer<typeof SessionStateSchema>;

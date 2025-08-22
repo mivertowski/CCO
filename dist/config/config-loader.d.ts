@@ -71,12 +71,18 @@ declare const ConfigSchema: z.ZodObject<{
     monitoring: z.ZodObject<{
         log_level: z.ZodDefault<z.ZodString>;
         log_path: z.ZodDefault<z.ZodString>;
+        enable_telemetry: z.ZodDefault<z.ZodBoolean>;
+        enable_perf_logs: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         log_level: string;
         log_path: string;
+        enable_telemetry: boolean;
+        enable_perf_logs: boolean;
     }, {
         log_level?: string | undefined;
         log_path?: string | undefined;
+        enable_telemetry?: boolean | undefined;
+        enable_perf_logs?: boolean | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     repository: {
@@ -84,15 +90,15 @@ declare const ConfigSchema: z.ZodObject<{
         auto_commit: boolean;
         commit_frequency: string;
     };
-    orchestrator: {
-        mode: string;
-        max_iterations: number;
-        checkpoint_interval: number;
-    };
     openrouter: {
         model: string;
         temperature: number;
         api_key?: string | undefined;
+    };
+    orchestrator: {
+        mode: string;
+        max_iterations: number;
+        checkpoint_interval: number;
     };
     claude_code: {
         use_subscription: boolean;
@@ -108,6 +114,8 @@ declare const ConfigSchema: z.ZodObject<{
     monitoring: {
         log_level: string;
         log_path: string;
+        enable_telemetry: boolean;
+        enable_perf_logs: boolean;
     };
 }, {
     repository: {
@@ -115,15 +123,15 @@ declare const ConfigSchema: z.ZodObject<{
         auto_commit?: boolean | undefined;
         commit_frequency?: string | undefined;
     };
-    orchestrator: {
-        mode?: string | undefined;
-        max_iterations?: number | undefined;
-        checkpoint_interval?: number | undefined;
-    };
     openrouter: {
         model?: string | undefined;
         temperature?: number | undefined;
         api_key?: string | undefined;
+    };
+    orchestrator: {
+        mode?: string | undefined;
+        max_iterations?: number | undefined;
+        checkpoint_interval?: number | undefined;
     };
     claude_code: {
         workspace: string;
@@ -139,6 +147,8 @@ declare const ConfigSchema: z.ZodObject<{
     monitoring: {
         log_level?: string | undefined;
         log_path?: string | undefined;
+        enable_telemetry?: boolean | undefined;
+        enable_perf_logs?: boolean | undefined;
     };
 }>;
 export type Config = z.infer<typeof ConfigSchema>;

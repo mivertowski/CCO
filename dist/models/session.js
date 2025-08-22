@@ -53,14 +53,17 @@ exports.SessionStateSchema = zod_1.z.object({
     repository: zod_1.z.string(),
     ccInstanceId: zod_1.z.string(),
     currentPhase: zod_1.z.nativeEnum(SessionPhase),
+    phase: zod_1.z.nativeEnum(SessionPhase).optional(), // Alias for currentPhase
     completedTasks: zod_1.z.array(zod_1.z.string()),
     pendingTasks: zod_1.z.array(zod_1.z.string()),
+    completedDoDCriteria: zod_1.z.array(zod_1.z.string()).default([]), // Track completed DoD criteria
     artifacts: zod_1.z.array(exports.ArtifactSchema),
     logs: zod_1.z.array(exports.LogEntrySchema),
     errors: zod_1.z.array(exports.ErrorSchema),
     iterations: zod_1.z.number().default(0),
     timestamp: zod_1.z.date(),
     lastCheckpoint: zod_1.z.date().optional(),
-    metadata: zod_1.z.record(zod_1.z.any()).optional()
+    metadata: zod_1.z.record(zod_1.z.any()).optional(),
+    phaseHistory: zod_1.z.array(zod_1.z.string()).optional() // Track phase transitions
 });
 //# sourceMappingURL=session.js.map

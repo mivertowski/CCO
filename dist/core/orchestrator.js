@@ -4,6 +4,9 @@ exports.Orchestrator = void 0;
 const session_1 = require("../models/session");
 const progress_tracker_1 = require("./progress-tracker");
 const manager_llm_1 = require("../llm/manager-llm");
+const logger_1 = require("../monitoring/logger");
+const progress_reporter_1 = require("../monitoring/progress-reporter");
+const telemetry_1 = require("../monitoring/telemetry");
 const uuid_1 = require("uuid");
 class Orchestrator {
     mission;
@@ -13,46 +16,86 @@ class Orchestrator {
     progressTracker;
     managerLLM;
     logger;
+    progressReporter;
+    telemetry;
     checkpointInterval;
     maxIterations;
     currentSession = null;
+    interactive;
     constructor(config) {
         this.mission = config.mission;
         this.openRouterClient = config.openRouterClient;
         this.claudeCodeClient = config.claudeCodeClient;
         this.sessionManager = config.sessionManager;
-        this.logger = config.logger;
+        // Create enhanced logger
+        this.logger = config.logger instanceof logger_1.EnhancedLogger
+            ? config.logger
+            : (0, logger_1.createEnhancedLogger)('.cco/logs', {
+                missionId: config.mission.id,
+                repository: config.mission.repository
+            });
         this.checkpointInterval = config.checkpointInterval || 5;
         this.maxIterations = config.maxIterations || 1000;
-        this.progressTracker = new progress_tracker_1.ProgressTracker(this.logger);
-        this.managerLLM = new manager_llm_1.ManagerLLM(this.openRouterClient, this.logger);
+        this.interactive = config.interactive ?? true;
+        // Create progress reporter
+        this.progressReporter = (0, progress_reporter_1.createProgressReporter)(this.logger, this.interactive);
+        // Create telemetry collector if enabled
+        if (config.enableTelemetry ?? process.env.ENABLE_TELEMETRY === 'true') {
+            this.telemetry = (0, telemetry_1.createTelemetryCollector)(this.logger);
+        }
+        // Get winston logger for components that require it
+        const winstonLogger = this.logger instanceof logger_1.EnhancedLogger
+            ? this.logger.winstonLogger
+            : this.logger;
+        this.progressTracker = new progress_tracker_1.ProgressTracker(winstonLogger);
+        this.managerLLM = new manager_llm_1.ManagerLLM(this.openRouterClient, winstonLogger);
     }
     async orchestrate() {
+        const orchestrationTimer = this.logger.startTimer();
         try {
-            this.logger.info('Starting orchestration', {
+            this.logger.orchestration('Starting orchestration', {
                 missionId: this.mission.id,
                 title: this.mission.title,
                 repository: this.mission.repository
             });
+            // Start progress reporting
+            this.progressReporter.startPhase('Initialization', 'Setting up orchestration environment...');
             // Initialize or recover session
             this.currentSession = await this.initializeSession();
+            // Initialize DoD progress tracking
+            this.progressReporter.initializeDoDProgress(this.mission);
             // Validate Claude Code environment
+            this.progressReporter.updatePhase('Validating Claude Code environment...');
+            const envTimer = this.telemetry?.startTimer('claudecode.validation');
             const isValidEnvironment = await this.claudeCodeClient.validateEnvironment();
+            const envDuration = envTimer ? envTimer() : 0;
             if (!isValidEnvironment) {
+                this.progressReporter.completePhase(false, 'Claude Code environment validation failed');
                 throw new Error('Claude Code environment validation failed');
+            }
+            this.progressReporter.completePhase(true, 'Environment validated');
+            if (typeof envDuration === 'number') {
+                this.telemetry?.trackApiCall('claudecode', 'validate', true, envDuration);
             }
             // Start Claude Code session
             if (this.claudeCodeClient.startSession) {
                 this.claudeCodeClient.startSession(this.currentSession.sessionId);
+                this.logger.claudeCode('Session started', { sessionId: this.currentSession.sessionId });
             }
             // Main orchestration loop
+            this.progressReporter.startPhase('Execution', 'Running orchestration iterations...');
             while (!this.isComplete() && this.currentSession.iterations < this.maxIterations) {
                 await this.executeIteration();
+                // Report iteration progress
+                this.progressReporter.reportIteration(this.currentSession.iterations, this.maxIterations, this.currentSession);
+                // Track mission progress in telemetry
+                this.telemetry?.trackMissionProgress(this.mission.id, this.currentSession.phase || this.currentSession.currentPhase, this.currentSession.iterations, this.currentSession.completedDoDCriteria?.length || 0, this.mission.definitionOfDone.length);
                 // Checkpoint periodically
                 if (this.currentSession.iterations % this.checkpointInterval === 0) {
                     await this.checkpoint();
                 }
             }
+            this.progressReporter.completePhase(true, 'Execution completed');
             // Final checkpoint
             await this.checkpoint();
             // End Claude Code session
@@ -61,19 +104,40 @@ class Orchestrator {
             }
             // Prepare final result
             const finalResult = await this.prepareFinalResult();
-            this.logger.info('Orchestration completed', {
+            const duration = orchestrationTimer();
+            // Generate final report
+            this.progressReporter.generateFinalReport(finalResult.success, this.currentSession, this.mission);
+            // Log orchestration completion
+            this.logger.orchestration('Orchestration completed', {
                 missionId: this.mission.id,
                 success: finalResult.success,
                 iterations: this.currentSession.iterations,
-                completionPercentage: this.progressTracker.calculateProgress(this.mission).completionPercentage
+                completionPercentage: this.progressTracker.calculateProgress(this.mission).completionPercentage,
+                duration
             });
+            // Record performance metrics
+            this.logger.performance('Total orchestration time', duration, {
+                missionId: this.mission.id,
+                success: finalResult.success
+            });
+            // Clean up telemetry
+            if (this.telemetry) {
+                await this.telemetry.stop();
+            }
             return finalResult;
         }
         catch (error) {
-            this.logger.error('Orchestration failed', {
-                error,
-                missionId: this.mission.id
+            // Report error through progress reporter
+            this.progressReporter.reportError(error, 'orchestration', false);
+            // Log error with enhanced context
+            this.logger.error('Orchestration failed', error, {
+                missionId: this.mission.id,
+                phase: this.currentSession?.phase || this.currentSession?.currentPhase,
+                iteration: this.currentSession?.iterations,
+                completedTasks: this.currentSession?.completedDoDCriteria?.length || 0
             });
+            // Track error in telemetry
+            this.telemetry?.trackError(error, 'orchestration', false);
             if (this.currentSession) {
                 await this.sessionManager.addError(this.currentSession.sessionId, {
                     id: (0, uuid_1.v4)(),
@@ -83,6 +147,12 @@ class Orchestrator {
                     stack: error.stack,
                     resolved: false
                 });
+                // Generate final report even on failure
+                this.progressReporter.generateFinalReport(false, this.currentSession, this.mission);
+            }
+            // Clean up telemetry even on error
+            if (this.telemetry) {
+                await this.telemetry.stop();
             }
             throw error;
         }

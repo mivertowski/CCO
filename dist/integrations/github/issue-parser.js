@@ -148,8 +148,9 @@ class GitHubIssueParser {
         }
         return description;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    extractPriority(labels) {
+    // Method kept for future use when label-based priority extraction is needed
+    // @ts-ignore - Unused method kept for future implementation
+    _extractPriority(labels) {
         const priorityLabels = {
             'priority:critical': mission_1.DoDPriority.CRITICAL,
             'priority:high': mission_1.DoDPriority.HIGH,

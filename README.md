@@ -1,5 +1,12 @@
 # Claude Code Orchestrator (CCO)
 
+[![npm version](https://img.shields.io/npm/v/claude-code-orchestrator)](https://www.npmjs.com/package/claude-code-orchestrator)
+[![GitHub stars](https://img.shields.io/github/stars/mivertowski/cco)](https://github.com/mivertowski/cco/stargazers)
+[![License](https://img.shields.io/github/license/mivertowski/cco)](https://github.com/mivertowski/cco/blob/main/LICENSE)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/mivertowski/cco/ci.yml)](https://github.com/mivertowski/cco/actions)
+[![codecov](https://img.shields.io/codecov/c/github/mivertowski/cco)](https://codecov.io/gh/mivertowski/cco)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/mivertowski/cco/blob/main/CONTRIBUTING.md)
+
 An automated orchestration system that manages Claude Code instances to complete complex, multi-session tasks without constant human intervention. CCO acts as an intelligent project manager, ensuring work continuity until all Definition of Done (DoD) criteria are achieved.
 
 ## 🚀 Features
@@ -26,18 +33,19 @@ An automated orchestration system that manages Claude Code instances to complete
 
 ## 🛠️ Installation
 
-### Quick Start with npx (No Installation)
+### Installation
+
+#### Option 1: NPM (Recommended)
 
 ```bash
-# Run directly without installing
-npx claude-code-orchestrator init
-npx claude-code-orchestrator start --mission mission.yaml
+# Install globally
+npm install -g claude-code-orchestrator
 
-# Or from GitHub directly
-npx github:mivertowski/cco init
+# Or use directly with npx (no installation)
+npx claude-code-orchestrator init
 ```
 
-### Traditional Installation
+#### Option 2: From Source
 
 ```bash
 # Clone the repository
@@ -52,6 +60,17 @@ npm run build
 
 # Install globally (optional)
 npm install -g .
+```
+
+#### Option 3: Direct Execution
+
+```bash
+# Run directly from npm without installing
+npx claude-code-orchestrator init
+npx claude-code-orchestrator start --mission mission.yaml
+
+# Or from GitHub directly
+npx github:mivertowski/cco init
 ```
 
 ## ⚙️ Configuration

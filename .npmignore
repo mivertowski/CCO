@@ -1,48 +1,54 @@
-# Source files (only include dist)
+# Source files
 src/
 tests/
-*.ts
-!*.d.ts
 
 # Configuration files
+.github/
+.vscode/
+.cco/
 .env
 .env.*
-tsconfig.json
-vitest.config.ts
-.eslintrc*
-.prettierrc*
 
 # Development files
-.vscode/
-.idea/
-.claude/
-.github/
-docker/
+*.ts
+!*.d.ts
+tsconfig.json
+vitest.config.ts
+.eslintrc.json
+
+# Documentation source
 docs/
-mission-examples/
-config-examples/
 
-# Build files
-*.tsbuildinfo
+# Test files
+test-mission.yaml
+missions/
 coverage/
-.nyc_output/
+*.test.*
+*.spec.*
 
-# Git files
-.git/
-.gitignore
-.gitattributes
-
-# Misc
+# Build artifacts
 *.log
 *.tmp
 .DS_Store
-Thumbs.db
-*.bak
-*.old
 
-# Keep only essential files for npm package
-# dist/ (compiled JS)
-# package.json
-# README.md
-# LICENSE
-# .npmignore
+# Development dependencies
+node_modules/
+.git/
+.gitignore
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+
+# CI/CD
+.travis.yml
+.circleci/
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# Examples (keep only essential ones)
+examples/**/*.log
+examples/**/.cco/

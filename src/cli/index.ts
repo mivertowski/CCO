@@ -16,7 +16,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { createLogger } from '../monitoring/logger';
+import { createLogger, createEnhancedLogger } from '../monitoring/logger';
 import { MissionParser } from '../core/mission-parser';
 import { Orchestrator } from '../core/orchestrator';
 import { SessionManager } from '../core/session-manager';
@@ -25,13 +25,15 @@ import { ClaudeCodeClient } from '../llm/claude-code-client';
 import { ClaudeCodeSDKClient } from '../llm/claude-code-sdk-client';
 import { IClaudeCodeClient } from '../llm/claude-code-interface';
 import { loadConfig } from '../config/config-loader';
+import { ErrorHandler } from '../utils/errors';
 import inquirer from 'inquirer';
 
 // Load environment variables
 dotenv.config();
 
 const program = new Command();
-const logger = createLogger();
+const baseLogger = createLogger();
+const logger = createEnhancedLogger('.cco/logs');
 
 program
   .name('cco')
@@ -83,8 +85,10 @@ persistence:
   path: ".cco/sessions"
   
 monitoring:
-  log_level: "INFO"
+  log_level: "info"
   log_path: ".cco/logs"
+  enable_telemetry: false
+  enable_perf_logs: false
 `;
         await fs.writeFile(configPath, defaultConfig.trim());
       }
@@ -98,8 +102,10 @@ monitoring:
       }
       
     } catch (error) {
+      const ccoError = ErrorHandler.handle(error);
+      logger.error('Initialization failed', ccoError);
       spinner.fail(chalk.red('Failed to initialize CCO'));
-      console.error(error);
+      console.error(ErrorHandler.format(ccoError));
       process.exit(1);
     }
   });
@@ -131,7 +137,7 @@ program
       
       // Parse mission
       spinner.text = 'Parsing mission file...';
-      const missionParser = new MissionParser(logger);
+      const missionParser = new MissionParser(baseLogger);
       const mission = await missionParser.parseMissionFile(options.mission);
       
       // Validate mission
@@ -148,8 +154,14 @@ program
       // Initialize components
       const sessionManager = new SessionManager(
         config.persistence.path,
-        logger
+        baseLogger
       );
+      
+      // Create enhanced logger for orchestration
+      const orchLogger = logger.child({
+        missionId: mission.id,
+        missionTitle: mission.title
+      });
       
       const openRouterClient = new OpenRouterClient(
         {
@@ -161,7 +173,7 @@ program
           retryAttempts: 3,
           retryDelay: 1000
         },
-        logger
+        baseLogger
       );
       
       // Choose between SDK and legacy client
@@ -180,7 +192,7 @@ program
             planMode: false, // Execute mode
             jsonMode: false
           },
-          logger
+          baseLogger
         );
       } else {
         // Legacy client (for backward compatibility)
@@ -195,7 +207,7 @@ program
             timeoutMs: 300000,
             contextWindow: 200000
           },
-          logger
+          baseLogger
         );
       }
       
@@ -205,9 +217,11 @@ program
         openRouterClient,
         claudeCodeClient,
         sessionManager,
-        logger,
+        logger: orchLogger,
         checkpointInterval: config.orchestrator.checkpoint_interval,
-        maxIterations: config.orchestrator.max_iterations
+        maxIterations: config.orchestrator.max_iterations,
+        interactive: process.stdout.isTTY,
+        enableTelemetry: config.monitoring?.enable_telemetry
       });
       
       // Start orchestration
@@ -227,8 +241,10 @@ program
       }
       
     } catch (error) {
+      const ccoError = ErrorHandler.handle(error);
+      logger.error('Orchestration failed', ccoError);
       spinner.fail(chalk.red('Orchestration failed'));
-      console.error(error);
+      console.error(ErrorHandler.format(ccoError));
       process.exit(1);
     }
   });
@@ -239,7 +255,7 @@ program
   .option('-s, --session <id>', 'Session ID to check')
   .action(async (options) => {
     try {
-      const sessionManager = new SessionManager('.cco/sessions', logger);
+      const sessionManager = new SessionManager('.cco/sessions', baseLogger);
       
       if (options.session) {
         const session = await sessionManager.loadSession(options.session);
@@ -264,8 +280,10 @@ program
         }
       }
     } catch (error) {
+      const ccoError = ErrorHandler.handle(error);
+      logger.error('Status check failed', ccoError);
       console.error(chalk.red('Failed to get status'));
-      console.error(error);
+      console.error(ErrorHandler.format(ccoError));
       process.exit(1);
     }
   });
@@ -276,7 +294,7 @@ program
   .option('-s, --session <id>', 'Session ID to resume')
   .action(async (options) => {
     try {
-      const sessionManager = new SessionManager('.cco/sessions', logger);
+      const sessionManager = new SessionManager('.cco/sessions', baseLogger);
       
       let sessionId = options.session;
       

@@ -101,8 +101,10 @@ export declare const SessionStateSchema: z.ZodObject<{
     repository: z.ZodString;
     ccInstanceId: z.ZodString;
     currentPhase: z.ZodNativeEnum<typeof SessionPhase>;
+    phase: z.ZodOptional<z.ZodNativeEnum<typeof SessionPhase>>;
     completedTasks: z.ZodArray<z.ZodString, "many">;
     pendingTasks: z.ZodArray<z.ZodString, "many">;
+    completedDoDCriteria: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     artifacts: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         type: z.ZodNativeEnum<typeof ArtifactType>;
@@ -185,6 +187,7 @@ export declare const SessionStateSchema: z.ZodObject<{
     timestamp: z.ZodDate;
     lastCheckpoint: z.ZodOptional<z.ZodDate>;
     metadata: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
+    phaseHistory: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     repository: string;
     currentPhase: SessionPhase;
@@ -194,6 +197,7 @@ export declare const SessionStateSchema: z.ZodObject<{
     ccInstanceId: string;
     completedTasks: string[];
     pendingTasks: string[];
+    completedDoDCriteria: string[];
     artifacts: {
         id: string;
         path: string;
@@ -224,7 +228,9 @@ export declare const SessionStateSchema: z.ZodObject<{
     }[];
     iterations: number;
     metadata?: Record<string, any> | undefined;
+    phase?: SessionPhase | undefined;
     lastCheckpoint?: Date | undefined;
+    phaseHistory?: string[] | undefined;
 }, {
     repository: string;
     currentPhase: SessionPhase;
@@ -263,8 +269,11 @@ export declare const SessionStateSchema: z.ZodObject<{
         resolution?: string | undefined;
     }[];
     metadata?: Record<string, any> | undefined;
+    phase?: SessionPhase | undefined;
+    completedDoDCriteria?: string[] | undefined;
     iterations?: number | undefined;
     lastCheckpoint?: Date | undefined;
+    phaseHistory?: string[] | undefined;
 }>;
 export type SessionState = z.infer<typeof SessionStateSchema>;
 export interface SessionContext {

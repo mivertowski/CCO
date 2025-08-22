@@ -60,11 +60,13 @@ const openrouter_client_1 = require("../llm/openrouter-client");
 const claude_code_client_1 = require("../llm/claude-code-client");
 const claude_code_sdk_client_1 = require("../llm/claude-code-sdk-client");
 const config_loader_1 = require("../config/config-loader");
+const errors_1 = require("../utils/errors");
 const inquirer_1 = __importDefault(require("inquirer"));
 // Load environment variables
 dotenv.config();
 const program = new commander_1.Command();
-const logger = (0, logger_1.createLogger)();
+const baseLogger = (0, logger_1.createLogger)();
+const logger = (0, logger_1.createEnhancedLogger)('.cco/logs');
 program
     .name('cco')
     .description('Claude Code Orchestrator - Automated orchestration for Claude Code')
@@ -111,8 +113,10 @@ persistence:
   path: ".cco/sessions"
   
 monitoring:
-  log_level: "INFO"
+  log_level: "info"
   log_path: ".cco/logs"
+  enable_telemetry: false
+  enable_perf_logs: false
 `;
             await fs.writeFile(configPath, defaultConfig.trim());
         }
@@ -125,8 +129,10 @@ monitoring:
         }
     }
     catch (error) {
+        const ccoError = errors_1.ErrorHandler.handle(error);
+        logger.error('Initialization failed', ccoError);
         spinner.fail(chalk_1.default.red('Failed to initialize CCO'));
-        console.error(error);
+        console.error(errors_1.ErrorHandler.format(ccoError));
         process.exit(1);
     }
 });
@@ -153,7 +159,7 @@ program
         }
         // Parse mission
         spinner.text = 'Parsing mission file...';
-        const missionParser = new mission_parser_1.MissionParser(logger);
+        const missionParser = new mission_parser_1.MissionParser(baseLogger);
         const mission = await missionParser.parseMissionFile(options.mission);
         // Validate mission
         const validation = missionParser.validateMission(mission);
@@ -165,7 +171,12 @@ program
         console.log(chalk_1.default.gray(`Repository: ${mission.repository}`));
         console.log(chalk_1.default.gray(`DoD Criteria: ${mission.definitionOfDone.length}`));
         // Initialize components
-        const sessionManager = new session_manager_1.SessionManager(config.persistence.path, logger);
+        const sessionManager = new session_manager_1.SessionManager(config.persistence.path, baseLogger);
+        // Create enhanced logger for orchestration
+        const orchLogger = logger.child({
+            missionId: mission.id,
+            missionTitle: mission.title
+        });
         const openRouterClient = new openrouter_client_1.OpenRouterClient({
             apiKey: process.env.OPENROUTER_API_KEY,
             model: config.openrouter.model,
@@ -174,7 +185,7 @@ program
             baseURL: 'https://openrouter.ai/api/v1',
             retryAttempts: 3,
             retryDelay: 1000
-        }, logger);
+        }, baseLogger);
         // Choose between SDK and legacy client
         let claudeCodeClient;
         if (options.useSdk || config.claude_code?.use_sdk) {
@@ -188,7 +199,7 @@ program
                 systemPrompt: `Working on mission: ${mission.title}`,
                 planMode: false, // Execute mode
                 jsonMode: false
-            }, logger);
+            }, baseLogger);
         }
         else {
             // Legacy client (for backward compatibility)
@@ -201,7 +212,7 @@ program
                 temperature: 0.3,
                 timeoutMs: 300000,
                 contextWindow: 200000
-            }, logger);
+            }, baseLogger);
         }
         // Create orchestrator
         const orchestrator = new orchestrator_1.Orchestrator({
@@ -209,9 +220,11 @@ program
             openRouterClient,
             claudeCodeClient,
             sessionManager,
-            logger,
+            logger: orchLogger,
             checkpointInterval: config.orchestrator.checkpoint_interval,
-            maxIterations: config.orchestrator.max_iterations
+            maxIterations: config.orchestrator.max_iterations,
+            interactive: process.stdout.isTTY,
+            enableTelemetry: config.monitoring?.enable_telemetry
         });
         // Start orchestration
         console.log(chalk_1.default.cyan('\n🚀 Starting orchestration...\n'));
@@ -229,8 +242,10 @@ program
         }
     }
     catch (error) {
+        const ccoError = errors_1.ErrorHandler.handle(error);
+        logger.error('Orchestration failed', ccoError);
         spinner.fail(chalk_1.default.red('Orchestration failed'));
-        console.error(error);
+        console.error(errors_1.ErrorHandler.format(ccoError));
         process.exit(1);
     }
 });
@@ -240,7 +255,7 @@ program
     .option('-s, --session <id>', 'Session ID to check')
     .action(async (options) => {
     try {
-        const sessionManager = new session_manager_1.SessionManager('.cco/sessions', logger);
+        const sessionManager = new session_manager_1.SessionManager('.cco/sessions', baseLogger);
         if (options.session) {
             const session = await sessionManager.loadSession(options.session);
             if (session) {
@@ -268,8 +283,10 @@ program
         }
     }
     catch (error) {
+        const ccoError = errors_1.ErrorHandler.handle(error);
+        logger.error('Status check failed', ccoError);
         console.error(chalk_1.default.red('Failed to get status'));
-        console.error(error);
+        console.error(errors_1.ErrorHandler.format(ccoError));
         process.exit(1);
     }
 });
@@ -279,7 +296,7 @@ program
     .option('-s, --session <id>', 'Session ID to resume')
     .action(async (options) => {
     try {
-        const sessionManager = new session_manager_1.SessionManager('.cco/sessions', logger);
+        const sessionManager = new session_manager_1.SessionManager('.cco/sessions', baseLogger);
         let sessionId = options.session;
         if (!sessionId) {
             const sessions = await sessionManager.listSessions();

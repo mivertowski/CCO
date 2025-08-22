@@ -10,7 +10,7 @@ export declare class GitHubIssueParser {
     private isMetaCheckbox;
     private extractYamlConfig;
     private extractDescription;
-    private extractPriority;
+    private _extractPriority;
     private generateDefaultDoD;
     createProgressComment(issueNumber: number, mission: Mission, progress: number): Promise<void>;
     private generateProgressBar;

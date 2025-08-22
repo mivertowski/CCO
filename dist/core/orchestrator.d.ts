@@ -4,15 +4,18 @@ import { OrchestrationMetrics } from '../models/metrics';
 import { OpenRouterClient } from '../llm/openrouter-client';
 import { IClaudeCodeClient } from '../llm/claude-code-interface';
 import { SessionManager } from './session-manager';
+import { EnhancedLogger } from '../monitoring/logger';
 import winston from 'winston';
 export interface OrchestratorConfig {
     mission: Mission;
     openRouterClient: OpenRouterClient;
     claudeCodeClient: IClaudeCodeClient;
     sessionManager: SessionManager;
-    logger: winston.Logger;
+    logger: winston.Logger | EnhancedLogger;
     checkpointInterval?: number;
     maxIterations?: number;
+    interactive?: boolean;
+    enableTelemetry?: boolean;
 }
 export interface OrchestrationResult {
     success: boolean;
@@ -30,9 +33,12 @@ export declare class Orchestrator {
     private progressTracker;
     private managerLLM;
     private logger;
+    private progressReporter;
+    private telemetry?;
     private checkpointInterval;
     private maxIterations;
     private currentSession;
+    private interactive;
     constructor(config: OrchestratorConfig);
     orchestrate(): Promise<OrchestrationResult>;
     private initializeSession;
