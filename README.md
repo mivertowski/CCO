@@ -414,12 +414,10 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 ## 📮 Support
 
 - **Issues**: [GitHub Issues](https://github.com/mivertowski/cco/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/mivertowski/cco/discussions)
-- **Twitter**: [@cco_ai](https://twitter.com/cco_ai)
 
 ## 📄 License
 
-MIT © [Your Organization]
+MIT © 2025 Michael Ivertowski
 
 ## 🙏 Acknowledgments
 
