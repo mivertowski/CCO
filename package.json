@@ -1,5 +1,5 @@
 {
-  "name": "@mivertowski/claude-code-orchestrator",
+  "name": "cco-cli",
   "version": "1.0.0",
   "description": "Automated orchestration system for managing Claude Code instances to complete complex tasks",
   "main": "dist/index.js",

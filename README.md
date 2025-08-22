@@ -39,10 +39,10 @@ An automated orchestration system that manages Claude Code instances to complete
 
 ```bash
 # Install globally
-npm install -g claude-code-orchestrator
+npm install -g cco-cli
 
 # Or use directly with npx (no installation)
-npx claude-code-orchestrator init
+npx cco-cli init
 ```
 
 #### Option 2: From Source
@@ -66,8 +66,8 @@ npm install -g .
 
 ```bash
 # Run directly from npm without installing
-npx claude-code-orchestrator init
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli init
+npx cco-cli start --mission mission.yaml
 
 # Or from GitHub directly
 npx github:mivertowski/cco init
