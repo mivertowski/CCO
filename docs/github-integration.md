@@ -95,7 +95,7 @@ jobs:
           node-version: '20'
       
       - name: Install CCO
-        run: npm install -g claude-code-orchestrator
+        run: npm install -g cco-cli
       
       - name: Execute Mission
         env:

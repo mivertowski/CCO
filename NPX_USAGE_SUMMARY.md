@@ -22,8 +22,8 @@ npx . --help
 ### After Publishing to npm
 ```bash
 # Once published to npm registry
-npx claude-code-orchestrator init
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli init
+npx cco-cli start --mission mission.yaml
 
 # Or shorter if unique
 npx cco init
@@ -39,7 +39,7 @@ npx github:mivertowski/cco start --mission mission.yaml
 ## 🔧 What Was Done
 
 1. **Updated package.json**:
-   - Added both `cco` and `claude-code-orchestrator` as bin entries
+   - Added `cco` as the main bin entry for cco-cli package
    - Added repository, bugs, and homepage fields
    - Specified files to include in npm package
    - Added more keywords for discoverability
@@ -82,7 +82,7 @@ npm login
 npm publish
 
 # 6. Test from npm
-npx claude-code-orchestrator@latest --version
+npx cco-cli@latest --version
 ```
 
 ## 🎯 Benefits
@@ -98,7 +98,7 @@ npx claude-code-orchestrator@latest --version
 ```bash
 # Quick test with free models
 export OPENROUTER_API_KEY="your-key"
-npx claude-code-orchestrator init
+npx cco-cli init
 echo 'mission:
   title: "Test"
   repository: "."
@@ -106,7 +106,7 @@ echo 'mission:
   definition_of_done:
     - criteria: "Works"
       priority: critical' > mission.yaml
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli start --mission mission.yaml
 ```
 
 The CCO is now ready for distribution via npx! 🎉

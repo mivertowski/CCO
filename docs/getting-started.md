@@ -17,7 +17,7 @@ Get CCO running in under 5 minutes:
 
 ```bash
 # 1. Install and initialize CCO
-npx claude-code-orchestrator init
+npx cco-cli init
 
 # 2. Set your API key
 export OPENROUTER_API_KEY="your_api_key_here"
@@ -36,7 +36,7 @@ mission:
 EOF
 
 # 4. Run the mission
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli start --mission mission.yaml
 ```
 
 That's it! CCO will now work on completing your mission.
@@ -47,15 +47,15 @@ That's it! CCO will now work on completing your mission.
 
 ```bash
 # Run directly with npx
-npx claude-code-orchestrator init
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli init
+npx cco-cli start --mission mission.yaml
 ```
 
 ### Option 2: Global Installation
 
 ```bash
 # Install globally
-npm install -g claude-code-orchestrator
+npm install -g cco-cli
 
 # Now use the 'cco' command
 cco init

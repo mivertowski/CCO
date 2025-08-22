@@ -1,6 +1,7 @@
 # Claude Code Orchestrator (CCO)
 
-[![npm version](https://img.shields.io/npm/v/claude-code-orchestrator)](https://www.npmjs.com/package/claude-code-orchestrator)
+[![npm version](https://img.shields.io/npm/v/cco-cli)](https://www.npmjs.com/package/cco-cli)
+[![npm downloads](https://img.shields.io/npm/dm/cco-cli)](https://www.npmjs.com/package/cco-cli)
 [![GitHub stars](https://img.shields.io/github/stars/mivertowski/cco)](https://github.com/mivertowski/cco/stargazers)
 [![License](https://img.shields.io/github/license/mivertowski/cco)](https://github.com/mivertowski/cco/blob/main/LICENSE)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/mivertowski/cco/ci.yml)](https://github.com/mivertowski/cco/actions)
@@ -149,7 +150,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
       - run: |
-          npm install -g claude-code-orchestrator
+          npm install -g cco-cli
           cco init
           cco github-mission --issue ${{ github.event.issue.number }}
 ```

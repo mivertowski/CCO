@@ -14,21 +14,21 @@ CCO can be used directly with `npx` without installing it globally. This is perf
 
 ```bash
 # Initialize CCO in current directory
-npx claude-code-orchestrator init
+npx cco-cli init
 
 # Start orchestration with a mission file
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli start --mission mission.yaml
 
 # Check status
-npx claude-code-orchestrator status
+npx cco-cli status
 
 # Resume a session
-npx claude-code-orchestrator resume
+npx cco-cli resume
 ```
 
 Short form using the `cco` alias:
 ```bash
-npx claude-code-orchestrator@latest init
+npx cco-cli@latest init
 # or if the package name is unique enough:
 npx cco init
 ```
@@ -72,7 +72,7 @@ export OPENROUTER_API_KEY="your-key-here"
 # Optional: export ANTHROPIC_API_KEY="your-key-here"
 
 # 3. Initialize CCO
-npx claude-code-orchestrator init
+npx cco-cli init
 
 # 4. Create your mission file
 cat > mission.yaml << 'EOF'
@@ -88,10 +88,10 @@ mission:
 EOF
 
 # 5. Start orchestration
-npx claude-code-orchestrator start --mission mission.yaml
+npx cco-cli start --mission mission.yaml
 
 # 6. Check status
-npx claude-code-orchestrator status
+npx cco-cli status
 ```
 
 ## Using with Free Models
@@ -110,7 +110,7 @@ claude_code:
 EOF
 
 # Run with the free configuration
-npx claude-code-orchestrator start --config .cco/config.yaml
+npx cco-cli start --config .cco/config.yaml
 ```
 
 ## CI/CD Pipeline Usage
@@ -143,8 +143,8 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          npx claude-code-orchestrator init
-          npx claude-code-orchestrator start --mission ${{ inputs.mission }}
+          npx cco-cli init
+          npx cco-cli start --mission ${{ inputs.mission }}
 ```
 
 ### GitLab CI
@@ -153,8 +153,8 @@ jobs:
 orchestrate:
   image: node:18
   script:
-    - npx claude-code-orchestrator init
-    - npx claude-code-orchestrator start --mission mission.yaml
+    - npx cco-cli init
+    - npx cco-cli start --mission mission.yaml
   variables:
     OPENROUTER_API_KEY: $OPENROUTER_API_KEY
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
@@ -167,7 +167,7 @@ FROM node:18-alpine
 WORKDIR /app
 COPY mission.yaml .
 ENV OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-RUN npx claude-code-orchestrator init
+RUN npx cco-cli init
 CMD ["npx", "claude-code-orchestrator", "start", "--mission", "mission.yaml"]
 ```
 
@@ -185,17 +185,17 @@ CMD ["npx", "claude-code-orchestrator", "start", "--mission", "mission.yaml"]
 ### Command Not Found
 ```bash
 # Ensure you're using the full package name
-npx claude-code-orchestrator init
+npx cco-cli init
 # Not just: npx cco init (unless package is installed)
 ```
 
 ### Using Specific Version
 ```bash
 # Force latest version
-npx claude-code-orchestrator@latest init
+npx cco-cli@latest init
 
 # Use specific version
-npx claude-code-orchestrator@0.1.0 init
+npx cco-cli@0.1.0 init
 ```
 
 ### Cache Issues
@@ -213,7 +213,7 @@ npx --ignore-existing claude-code-orchestrator init
 # Set proxy for npm/npx
 export HTTP_PROXY=http://proxy.company.com:8080
 export HTTPS_PROXY=http://proxy.company.com:8080
-npx claude-code-orchestrator init
+npx cco-cli init
 ```
 
 ## Development Workflow
@@ -251,20 +251,20 @@ npm login
 npm publish
 
 # Now anyone can use:
-npx claude-code-orchestrator init
+npx cco-cli init
 ```
 
 ## Version Management
 
 ```bash
 # View available versions
-npm view claude-code-orchestrator versions
+npm view cco-cli versions
 
 # Use specific version
-npx claude-code-orchestrator@0.1.0 init
+npx cco-cli@0.1.0 init
 
 # Use latest beta
-npx claude-code-orchestrator@beta init
+npx cco-cli@beta init
 
 # Use from specific commit
 npx github:mivertowski/cco#commit-hash init

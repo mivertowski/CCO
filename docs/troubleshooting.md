@@ -41,7 +41,7 @@ Error: Cannot find module '../monitoring/logger'
 
 2. Use the npm published version (when available):
    ```bash
-   npx claude-code-orchestrator init
+   npx cco-cli init
    ```
 
 ### Deprecated Package Warnings
@@ -101,7 +101,7 @@ Subscription mode is useful for:
 
 3. Run with proper permissions:
    ```bash
-   sudo npx claude-code-orchestrator init  # Only if absolutely necessary
+   sudo npx cco-cli init  # Only if absolutely necessary
    ```
 
 ### Build Failures

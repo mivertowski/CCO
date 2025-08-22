@@ -371,7 +371,7 @@ Response time benchmarks
 10.1 Standalone CLI Tool (Recommended)
 bash
 # Installation
-npm install -g claude-code-orchestrator
+npm install -g cco-cli
 
 # Initialize in a repository
 cd /path/to/your/repo

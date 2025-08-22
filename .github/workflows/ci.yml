@@ -180,7 +180,7 @@ jobs:
       
       - name: Check if version exists on npm
         run: |
-          if npm view claude-code-orchestrator@${{ steps.version.outputs.version }} > /dev/null 2>&1; then
+          if npm view cco-cli@${{ steps.version.outputs.version }} > /dev/null 2>&1; then
             echo "Version ${{ steps.version.outputs.version }} already exists on npm"
           else
             echo "Version ${{ steps.version.outputs.version }} is new and can be published"

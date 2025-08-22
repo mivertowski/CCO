@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Installation
 ```bash
-npm install -g claude-code-orchestrator
+npm install -g cco-cli
 ```
 
 ### Quick Start

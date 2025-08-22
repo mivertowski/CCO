@@ -28,7 +28,7 @@ npm pack --dry-run
 # Confirm publication
 echo ""
 echo "Ready to publish version $(node -p "require('./package.json').version")"
-echo "This will publish to: https://www.npmjs.com/package/claude-code-orchestrator"
+echo "This will publish to: https://www.npmjs.com/package/cco-cli"
 read -p "Continue with publication? (y/n) " -n 1 -r
 echo ""
 
@@ -37,7 +37,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     npm publish --access public
     
     echo "✅ Successfully published!"
-    echo "View at: https://www.npmjs.com/package/claude-code-orchestrator"
+    echo "View at: https://www.npmjs.com/package/cco-cli"
     
     # Create git tag
     VERSION=$(node -p "require('./package.json').version")
