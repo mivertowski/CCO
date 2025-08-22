@@ -215,7 +215,7 @@ program
                 apiKey: process.env.ANTHROPIC_API_KEY,
                 projectPath: mission.repository,
                 maxTurns: Math.min(config.orchestrator.max_iterations, 10), // SDK has turn limits
-                model: 'claude-3-5-sonnet-20241022', // Latest model
+                model: 'claude-opus-4-1-20250805', // Opus 4.1 - Latest and most capable model
                 temperature: 0.3,
                 systemPrompt: `Working on mission: ${mission.title}`,
                 planMode: false, // Execute mode

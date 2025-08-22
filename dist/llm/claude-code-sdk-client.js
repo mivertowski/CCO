@@ -41,7 +41,7 @@ exports.ClaudeCodeSDKConfigSchema = zod_1.z.object({
     apiKey: zod_1.z.string().optional(), // Optional, can use ANTHROPIC_API_KEY env var
     projectPath: zod_1.z.string(),
     maxTurns: zod_1.z.number().default(10), // Max iterations for multi-turn conversations
-    model: zod_1.z.string().default('claude-3-5-sonnet-20241022'), // Latest model
+    model: zod_1.z.string().default('claude-opus-4-1-20250805'), // Opus 4.1 - Latest and most capable model
     temperature: zod_1.z.number().min(0).max(1).default(0.3),
     systemPrompt: zod_1.z.string().optional(),
     planMode: zod_1.z.boolean().default(false), // Analysis without modifications
@@ -309,8 +309,9 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
         return typeMap[extension] || 'other';
     }
     calculateCost(inputTokens, outputTokens) {
-        // Pricing for Claude 3.5 Sonnet (as of 2025)
+        // Pricing for Claude models (as of 2025)
         const costs = {
+            'claude-opus-4-1-20250805': { input: 0.015, output: 0.075 },
             'claude-3-5-sonnet-20241022': { input: 0.003, output: 0.015 },
             'claude-3-opus-20240229': { input: 0.015, output: 0.075 },
             'claude-3-sonnet-20240229': { input: 0.003, output: 0.015 },

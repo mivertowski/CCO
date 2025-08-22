@@ -69,7 +69,7 @@ const ConfigSchema = zod_1.z.object({
     }).optional(),
     openrouter: zod_1.z.object({
         api_key: zod_1.z.string().optional(),
-        model: zod_1.z.string().default('anthropic/claude-3-opus'),
+        model: zod_1.z.string().default('anthropic/claude-opus-4-1'),
         temperature: zod_1.z.number().default(0.5)
     }),
     claude_code: zod_1.z.object({
