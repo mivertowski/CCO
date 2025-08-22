@@ -546,12 +546,13 @@ if __name__ == '__main__':
     }
     async getModelInfo() {
         switch (this.config.backend) {
-            case 'ollama':
+            case 'ollama': {
                 const modelName = this.config.localModel?.name || this.config.model || 'llama3.2:3b';
                 return {
                     name: modelName,
                     context: this.config.localModel?.contextSize || 4096
                 };
+            }
             case 'vllm':
                 return {
                     name: this.config.model || 'mistralai/Mistral-7B-Instruct-v0.3',

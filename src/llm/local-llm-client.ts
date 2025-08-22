@@ -620,12 +620,13 @@ if __name__ == '__main__':
 
   async getModelInfo(): Promise<{ name: string; parameters?: number; context?: number }> {
     switch (this.config.backend) {
-      case 'ollama':
+      case 'ollama': {
         const modelName = this.config.localModel?.name || this.config.model || 'llama3.2:3b';
         return {
           name: modelName,
           context: this.config.localModel?.contextSize || 4096
         };
+      }
       
       case 'vllm':
         return {

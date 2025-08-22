@@ -39,7 +39,7 @@ class LLMProviderFactory {
         let orchestratorClient = null;
         let claudeCodeClient = null;
         switch (config.provider) {
-            case LLMProvider.OPENROUTER:
+            case LLMProvider.OPENROUTER: {
                 if (!config.apiKey) {
                     throw new Error('OpenRouter API key is required');
                 }
@@ -54,7 +54,8 @@ class LLMProviderFactory {
                 }, logger);
                 orchestratorClient = new OpenRouterAdapter(openRouterClient);
                 break;
-            case LLMProvider.CLAUDE_CODE:
+            }
+            case LLMProvider.CLAUDE_CODE: {
                 // Use Claude Code SDK for both orchestration and execution
                 if (!config.apiKey && !process.env.ANTHROPIC_API_KEY) {
                     logger.warn('No Anthropic API key found - will use Claude Code subscription if available');
@@ -85,6 +86,7 @@ class LLMProviderFactory {
                     }
                 };
                 break;
+            }
             case LLMProvider.LOCAL_CUDA:
             case LLMProvider.LOCAL_CPU:
                 orchestratorClient = new local_llm_client_1.LocalLLMClient({
