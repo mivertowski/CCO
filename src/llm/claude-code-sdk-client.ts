@@ -8,7 +8,7 @@ export const ClaudeCodeSDKConfigSchema = z.object({
   apiKey: z.string().optional(), // Optional, can use ANTHROPIC_API_KEY env var
   projectPath: z.string(),
   maxTurns: z.number().default(10), // Max iterations for multi-turn conversations
-  model: z.string().default('claude-3-5-sonnet-20241022'), // Latest model
+  model: z.string().default('claude-opus-4-1-20250805'), // Opus 4.1 - Latest and most capable model
   temperature: z.number().min(0).max(1).default(0.3),
   systemPrompt: z.string().optional(),
   planMode: z.boolean().default(false), // Analysis without modifications
@@ -65,7 +65,8 @@ export class ClaudeCodeSDKClient implements IClaudeCodeClient {
         customSystemPrompt: this.config.systemPrompt || this.buildSystemPrompt(context),
         maxTurns: this.config.maxTurns,
         cwd: context?.workingDirectory || this.config.projectPath,
-        permissionMode: this.config.planMode ? 'plan' : 'default',
+        // Use bypassPermissions mode to skip all permission prompts for automated execution
+        permissionMode: this.config.planMode ? 'plan' : 'bypassPermissions',
         // Let SDK use default tools based on the environment
         // Most common code tools are available by default
       };
@@ -327,8 +328,9 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
   }
 
   private calculateCost(inputTokens: number, outputTokens: number): number {
-    // Pricing for Claude 3.5 Sonnet (as of 2025)
+    // Pricing for Claude models (as of 2025)
     const costs = {
+      'claude-opus-4-1-20250805': { input: 0.015, output: 0.075 },
       'claude-3-5-sonnet-20241022': { input: 0.003, output: 0.015 },
       'claude-3-opus-20240229': { input: 0.015, output: 0.075 },
       'claude-3-sonnet-20240229': { input: 0.003, output: 0.015 },

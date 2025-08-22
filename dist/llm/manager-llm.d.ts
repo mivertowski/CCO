@@ -1,4 +1,4 @@
-import { OpenRouterClient } from './openrouter-client';
+import { ILLMClient } from './llm-provider';
 import { Mission, DoDCriteria, MissionProgress } from '../models/mission';
 import { SessionState } from '../models/session';
 import { ClaudeCodeResult } from './claude-code-client';
@@ -25,7 +25,7 @@ export interface ErrorRecovery {
 export declare class ManagerLLM {
     private client;
     private logger;
-    constructor(client: OpenRouterClient, logger: winston.Logger);
+    constructor(client: ILLMClient, logger: winston.Logger);
     analyzeCurrentState(mission: Mission, session: SessionState, progress: MissionProgress): Promise<AnalysisResult>;
     planNextAction(analysis: AnalysisResult, criterion: DoDCriteria, session: SessionState): Promise<string>;
     validateCriterionCompletion(criterion: DoDCriteria, executionResult: ClaudeCodeResult, session: SessionState): Promise<ValidationResult>;

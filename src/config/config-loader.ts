@@ -6,16 +6,34 @@ const ConfigSchema = z.object({
   orchestrator: z.object({
     mode: z.string().default('single_instance'),
     max_iterations: z.number().default(1000),
-    checkpoint_interval: z.number().default(5)
+    checkpoint_interval: z.number().default(5),
+    llm_provider: z.enum(['openrouter', 'claude-code', 'local-cuda', 'local-cpu', 'ollama', 'llamacpp', 'vllm']).optional()
   }),
   repository: z.object({
     path: z.string(),
     auto_commit: z.boolean().default(true),
     commit_frequency: z.string().default('per_session')
   }),
+  llm: z.object({
+    provider: z.enum(['openrouter', 'claude-code', 'local-cuda', 'local-cpu', 'ollama', 'llamacpp', 'vllm']).default('openrouter'),
+    huggingface_token: z.string().optional(),
+    local_model: z.object({
+      path: z.string().optional(),
+      name: z.string().optional(),
+      quantization: z.string().optional(),
+      context_size: z.number().default(4096),
+      gpu_layers: z.number().optional(),
+      threads: z.number().optional()
+    }).optional(),
+    vllm_options: z.object({
+      tensor_parallel_size: z.number().optional(),
+      dtype: z.enum(['auto', 'half', 'float16', 'bfloat16', 'float32']).optional(),
+      gpu_memory_utilization: z.number().optional()
+    }).optional()
+  }).optional(),
   openrouter: z.object({
     api_key: z.string().optional(),
-    model: z.string().default('anthropic/claude-3-opus'),
+    model: z.string().default('anthropic/claude-opus-4-1'),
     temperature: z.number().default(0.5)
   }),
   claude_code: z.object({

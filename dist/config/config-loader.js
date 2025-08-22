@@ -42,13 +42,31 @@ const ConfigSchema = zod_1.z.object({
     orchestrator: zod_1.z.object({
         mode: zod_1.z.string().default('single_instance'),
         max_iterations: zod_1.z.number().default(1000),
-        checkpoint_interval: zod_1.z.number().default(5)
+        checkpoint_interval: zod_1.z.number().default(5),
+        llm_provider: zod_1.z.enum(['openrouter', 'claude-code', 'local-cuda', 'local-cpu', 'ollama', 'llamacpp', 'vllm']).optional()
     }),
     repository: zod_1.z.object({
         path: zod_1.z.string(),
         auto_commit: zod_1.z.boolean().default(true),
         commit_frequency: zod_1.z.string().default('per_session')
     }),
+    llm: zod_1.z.object({
+        provider: zod_1.z.enum(['openrouter', 'claude-code', 'local-cuda', 'local-cpu', 'ollama', 'llamacpp', 'vllm']).default('openrouter'),
+        huggingface_token: zod_1.z.string().optional(),
+        local_model: zod_1.z.object({
+            path: zod_1.z.string().optional(),
+            name: zod_1.z.string().optional(),
+            quantization: zod_1.z.string().optional(),
+            context_size: zod_1.z.number().default(4096),
+            gpu_layers: zod_1.z.number().optional(),
+            threads: zod_1.z.number().optional()
+        }).optional(),
+        vllm_options: zod_1.z.object({
+            tensor_parallel_size: zod_1.z.number().optional(),
+            dtype: zod_1.z.enum(['auto', 'half', 'float16', 'bfloat16', 'float32']).optional(),
+            gpu_memory_utilization: zod_1.z.number().optional()
+        }).optional()
+    }).optional(),
     openrouter: zod_1.z.object({
         api_key: zod_1.z.string().optional(),
         model: zod_1.z.string().default('anthropic/claude-3-opus'),

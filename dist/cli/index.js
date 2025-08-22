@@ -56,9 +56,9 @@ const logger_1 = require("../monitoring/logger");
 const mission_parser_1 = require("../core/mission-parser");
 const orchestrator_1 = require("../core/orchestrator");
 const session_manager_1 = require("../core/session-manager");
-const openrouter_client_1 = require("../llm/openrouter-client");
 const claude_code_client_1 = require("../llm/claude-code-client");
 const claude_code_sdk_client_1 = require("../llm/claude-code-sdk-client");
+const llm_provider_1 = require("../llm/llm-provider");
 const config_loader_1 = require("../config/config-loader");
 const errors_1 = require("../utils/errors");
 const inquirer_1 = __importDefault(require("inquirer"));
@@ -142,6 +142,8 @@ program
     .option('-m, --mission <path>', 'Path to mission file', 'mission.yaml')
     .option('-c, --config <path>', 'Path to config file', '.cco/config.yaml')
     .option('--use-sdk', 'Use Claude Code SDK for automation (recommended)')
+    .option('--llm <provider>', 'LLM provider (openrouter|claude-code|local-cuda|local-cpu|ollama|vllm)')
+    .option('--local-model <name>', 'Local model name for Ollama or path for llama.cpp')
     .option('--resume', 'Resume from last session')
     .action(async (options) => {
     const spinner = (0, ora_1.default)('Starting orchestration...').start();
@@ -177,18 +179,37 @@ program
             missionId: mission.id,
             missionTitle: mission.title
         });
-        const openRouterClient = new openrouter_client_1.OpenRouterClient({
-            apiKey: process.env.OPENROUTER_API_KEY,
-            model: config.openrouter.model,
-            temperature: config.openrouter.temperature,
-            maxTokens: 4096,
-            baseURL: 'https://openrouter.ai/api/v1',
-            retryAttempts: 3,
-            retryDelay: 1000
+        // Initialize LLM clients based on configuration
+        const llmProvider = options.llm || config.llm?.provider || config.orchestrator?.llm_provider ||
+            (process.env.OPENROUTER_API_KEY ? 'openrouter' :
+                process.env.ANTHROPIC_API_KEY ? 'claude-code' : 'local-cuda');
+        console.log(chalk_1.default.gray(`Using LLM provider: ${llmProvider}`));
+        // Set HF token if provided
+        if (config.llm?.huggingface_token) {
+            process.env.HF_TOKEN = config.llm.huggingface_token;
+        }
+        const { orchestratorClient, claudeCodeClient: llmClaudeClient } = await llm_provider_1.LLMProviderFactory.create({
+            provider: llmProvider,
+            apiKey: llmProvider === 'openrouter' ? process.env.OPENROUTER_API_KEY :
+                llmProvider === 'claude-code' ? process.env.ANTHROPIC_API_KEY : undefined,
+            model: options.localModel || config.openrouter?.model || config.llm?.local_model?.name,
+            temperature: config.openrouter?.temperature || 0.7,
+            maxTokens: 100000,
+            baseURL: llmProvider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined,
+            localModel: config.llm?.local_model,
+            vllmOptions: config.llm?.vllm_options
         }, baseLogger);
-        // Choose between SDK and legacy client
+        // Ensure we have an orchestrator client
+        if (!orchestratorClient) {
+            throw new Error(`Failed to initialize orchestrator client for provider: ${llmProvider}`);
+        }
+        // Choose Claude Code client implementation
         let claudeCodeClient;
-        if (options.useSdk || config.claude_code?.use_sdk) {
+        // Use the LLM-provided Claude client if available, otherwise create one
+        if (llmClaudeClient) {
+            claudeCodeClient = llmClaudeClient;
+        }
+        else if (options.useSdk || config.claude_code?.use_sdk) {
             // Use the new SDK client (recommended)
             claudeCodeClient = new claude_code_sdk_client_1.ClaudeCodeSDKClient({
                 apiKey: process.env.ANTHROPIC_API_KEY,
@@ -214,10 +235,10 @@ program
                 contextWindow: 200000
             }, baseLogger);
         }
-        // Create orchestrator
+        // Create orchestrator with flexible LLM backend
         const orchestrator = new orchestrator_1.Orchestrator({
             mission,
-            openRouterClient,
+            openRouterClient: orchestratorClient, // Type compatibility
             claudeCodeClient,
             sessionManager,
             logger: orchLogger,
@@ -354,6 +375,8 @@ program
     .option('--poll-interval <minutes>', 'Polling interval for auto mode (minutes)', parseInt, 30)
     .option('--labels <labels>', 'Filter issues by labels (comma-separated)')
     .option('--max-issues <count>', 'Maximum issues to process in auto mode', parseInt, 5)
+    .option('--llm <provider>', 'LLM provider (openrouter|claude-code|local-cuda|local-cpu|ollama|vllm)')
+    .option('--local-model <name>', 'Local model name for Ollama or path for llama.cpp')
     .action(async (options) => {
     const spinner = (0, ora_1.default)('Initializing GitHub integration...').start();
     try {
@@ -542,26 +565,32 @@ program
                 const config = await (0, config_loader_1.loadConfig)('.cco/config.yaml');
                 // Initialize session manager
                 const sessionManager = new session_manager_1.SessionManager('.cco/sessions', baseLogger);
-                // Initialize LLM clients
-                let openRouterClient = null;
-                let claudeCodeClient = null;
-                // Always initialize both clients for GitHub integration
-                if (process.env.OPENROUTER_API_KEY) {
-                    console.log(chalk_1.default.gray(`Initializing OpenRouter client with API key (${process.env.OPENROUTER_API_KEY.substring(0, 10)}...)`));
-                    openRouterClient = new openrouter_client_1.OpenRouterClient({
-                        apiKey: process.env.OPENROUTER_API_KEY,
-                        model: config.openrouter?.model || 'claude-3-opus',
-                        temperature: config.openrouter?.temperature || 0.7,
-                        maxTokens: 100000,
-                        baseURL: 'https://openrouter.ai/api/v1',
-                        retryAttempts: 3,
-                        retryDelay: 1000
-                    }, baseLogger);
+                // Initialize LLM clients using the provider factory
+                const llmProvider = options.llm || config.llm?.provider || config.orchestrator?.llm_provider ||
+                    await llm_provider_1.LLMProviderFactory.detectBestProvider(baseLogger);
+                console.log(chalk_1.default.gray(`Using LLM provider for GitHub integration: ${llmProvider}`));
+                // Set HF token if provided
+                if (config.llm?.huggingface_token || process.env.HF_TOKEN) {
+                    process.env.HF_TOKEN = config.llm?.huggingface_token || process.env.HF_TOKEN;
                 }
-                else {
-                    console.log(chalk_1.default.yellow('No OpenRouter API key found'));
+                const { orchestratorClient, claudeCodeClient: llmClaudeClient } = await llm_provider_1.LLMProviderFactory.create({
+                    provider: llmProvider,
+                    apiKey: llmProvider === 'openrouter' ? process.env.OPENROUTER_API_KEY :
+                        llmProvider === 'claude-code' ? process.env.ANTHROPIC_API_KEY : undefined,
+                    model: options.localModel || config.openrouter?.model || config.llm?.local_model?.name || 'llama3.2:3b',
+                    temperature: config.openrouter?.temperature || 0.7,
+                    maxTokens: 100000,
+                    baseURL: llmProvider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined,
+                    localModel: config.llm?.local_model,
+                    vllmOptions: config.llm?.vllm_options
+                }, baseLogger);
+                // Ensure we have at least one client
+                if (!orchestratorClient && !llmClaudeClient) {
+                    throw new Error(`Failed to initialize LLM clients for provider: ${llmProvider}`);
                 }
-                if (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription) {
+                // Create Claude Code client if not provided by LLM factory
+                let claudeCodeClient = llmClaudeClient;
+                if (!claudeCodeClient && (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription)) {
                     claudeCodeClient = new claude_code_sdk_client_1.ClaudeCodeSDKClient({
                         apiKey: process.env.ANTHROPIC_API_KEY,
                         model: 'claude-opus-4-1-20250805',
@@ -572,10 +601,7 @@ program
                         jsonMode: false
                     }, baseLogger);
                 }
-                // Check if we have at least one client
-                if (!openRouterClient && !claudeCodeClient) {
-                    throw new Error('No LLM client available. Please set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in your .env file');
-                }
+                const openRouterClient = orchestratorClient;
                 // Create orchestrator
                 const orchestrator = new orchestrator_1.Orchestrator({
                     mission,

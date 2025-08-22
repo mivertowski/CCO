@@ -4,14 +4,17 @@ declare const ConfigSchema: z.ZodObject<{
         mode: z.ZodDefault<z.ZodString>;
         max_iterations: z.ZodDefault<z.ZodNumber>;
         checkpoint_interval: z.ZodDefault<z.ZodNumber>;
+        llm_provider: z.ZodOptional<z.ZodEnum<["openrouter", "claude-code", "local-cuda", "local-cpu", "ollama", "llamacpp", "vllm"]>>;
     }, "strip", z.ZodTypeAny, {
         mode: string;
         max_iterations: number;
         checkpoint_interval: number;
+        llm_provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
     }, {
         mode?: string | undefined;
         max_iterations?: number | undefined;
         checkpoint_interval?: number | undefined;
+        llm_provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
     }>;
     repository: z.ZodObject<{
         path: z.ZodString;
@@ -26,6 +29,77 @@ declare const ConfigSchema: z.ZodObject<{
         auto_commit?: boolean | undefined;
         commit_frequency?: string | undefined;
     }>;
+    llm: z.ZodOptional<z.ZodObject<{
+        provider: z.ZodDefault<z.ZodEnum<["openrouter", "claude-code", "local-cuda", "local-cpu", "ollama", "llamacpp", "vllm"]>>;
+        huggingface_token: z.ZodOptional<z.ZodString>;
+        local_model: z.ZodOptional<z.ZodObject<{
+            path: z.ZodOptional<z.ZodString>;
+            name: z.ZodOptional<z.ZodString>;
+            quantization: z.ZodOptional<z.ZodString>;
+            context_size: z.ZodDefault<z.ZodNumber>;
+            gpu_layers: z.ZodOptional<z.ZodNumber>;
+            threads: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            context_size: number;
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            gpu_layers?: number | undefined;
+        }, {
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            context_size?: number | undefined;
+            gpu_layers?: number | undefined;
+        }>>;
+        vllm_options: z.ZodOptional<z.ZodObject<{
+            tensor_parallel_size: z.ZodOptional<z.ZodNumber>;
+            dtype: z.ZodOptional<z.ZodEnum<["auto", "half", "float16", "bfloat16", "float32"]>>;
+            gpu_memory_utilization: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        }, {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        provider: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu";
+        huggingface_token?: string | undefined;
+        local_model?: {
+            context_size: number;
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            gpu_layers?: number | undefined;
+        } | undefined;
+        vllm_options?: {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        } | undefined;
+    }, {
+        provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
+        huggingface_token?: string | undefined;
+        local_model?: {
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            context_size?: number | undefined;
+            gpu_layers?: number | undefined;
+        } | undefined;
+        vllm_options?: {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        } | undefined;
+    }>>;
     openrouter: z.ZodObject<{
         api_key: z.ZodOptional<z.ZodString>;
         model: z.ZodDefault<z.ZodString>;
@@ -99,6 +173,7 @@ declare const ConfigSchema: z.ZodObject<{
         mode: string;
         max_iterations: number;
         checkpoint_interval: number;
+        llm_provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
     };
     claude_code: {
         use_subscription: boolean;
@@ -117,6 +192,23 @@ declare const ConfigSchema: z.ZodObject<{
         enable_telemetry: boolean;
         enable_perf_logs: boolean;
     };
+    llm?: {
+        provider: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu";
+        huggingface_token?: string | undefined;
+        local_model?: {
+            context_size: number;
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            gpu_layers?: number | undefined;
+        } | undefined;
+        vllm_options?: {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        } | undefined;
+    } | undefined;
 }, {
     repository: {
         path: string;
@@ -132,6 +224,7 @@ declare const ConfigSchema: z.ZodObject<{
         mode?: string | undefined;
         max_iterations?: number | undefined;
         checkpoint_interval?: number | undefined;
+        llm_provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
     };
     claude_code: {
         workspace: string;
@@ -150,6 +243,23 @@ declare const ConfigSchema: z.ZodObject<{
         enable_telemetry?: boolean | undefined;
         enable_perf_logs?: boolean | undefined;
     };
+    llm?: {
+        provider?: "ollama" | "llamacpp" | "vllm" | "openrouter" | "claude-code" | "local-cuda" | "local-cpu" | undefined;
+        huggingface_token?: string | undefined;
+        local_model?: {
+            path?: string | undefined;
+            name?: string | undefined;
+            threads?: number | undefined;
+            quantization?: string | undefined;
+            context_size?: number | undefined;
+            gpu_layers?: number | undefined;
+        } | undefined;
+        vllm_options?: {
+            dtype?: "auto" | "half" | "float16" | "bfloat16" | "float32" | undefined;
+            tensor_parallel_size?: number | undefined;
+            gpu_memory_utilization?: number | undefined;
+        } | undefined;
+    } | undefined;
 }>;
 export type Config = z.infer<typeof ConfigSchema>;
 export declare function loadConfig(configPath: string): Promise<Config>;

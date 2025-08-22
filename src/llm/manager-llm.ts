@@ -1,4 +1,4 @@
-import { OpenRouterClient } from './openrouter-client';
+import { ILLMClient } from './llm-provider';
 import { Mission, DoDCriteria, MissionProgress } from '../models/mission';
 import { SessionState } from '../models/session';
 import { ClaudeCodeResult } from './claude-code-client';
@@ -27,10 +27,10 @@ export interface ErrorRecovery {
 }
 
 export class ManagerLLM {
-  private client: OpenRouterClient;
+  private client: ILLMClient;
   private logger: winston.Logger;
 
-  constructor(client: OpenRouterClient, logger: winston.Logger) {
+  constructor(client: ILLMClient, logger: winston.Logger) {
     this.client = client;
     this.logger = logger;
   }
@@ -43,9 +43,9 @@ export class ManagerLLM {
     const systemPrompt = this.buildAnalysisSystemPrompt();
     const userMessage = this.buildAnalysisUserMessage(mission, session, progress);
 
-    const response = await this.client.sendMessage(systemPrompt, userMessage);
+    const response = await this.client.generateResponse(userMessage, systemPrompt);
     
-    return this.parseAnalysisResponse(response.content);
+    return this.parseAnalysisResponse(response);
   }
 
   async planNextAction(
@@ -56,14 +56,14 @@ export class ManagerLLM {
     const systemPrompt = this.buildPlanningSystemPrompt();
     const userMessage = this.buildPlanningUserMessage(analysis, criterion, session);
 
-    const response = await this.client.sendMessage(systemPrompt, userMessage);
+    const response = await this.client.generateResponse(userMessage, systemPrompt);
     
     this.logger.info('Generated action plan', {
       criterionId: criterion.id,
-      planLength: response.content.length
+      planLength: response.length
     });
 
-    return response.content;
+    return response;
   }
 
   async validateCriterionCompletion(
@@ -74,9 +74,9 @@ export class ManagerLLM {
     const systemPrompt = this.buildValidationSystemPrompt();
     const userMessage = this.buildValidationUserMessage(criterion, executionResult, session);
 
-    const response = await this.client.sendMessage(systemPrompt, userMessage);
+    const response = await this.client.generateResponse(userMessage, systemPrompt);
     
-    return this.parseValidationResponse(response.content);
+    return this.parseValidationResponse(response);
   }
 
   async generateErrorRecovery(
@@ -86,9 +86,9 @@ export class ManagerLLM {
     const systemPrompt = this.buildErrorRecoverySystemPrompt();
     const userMessage = this.buildErrorRecoveryUserMessage(error, session);
 
-    const response = await this.client.sendMessage(systemPrompt, userMessage);
+    const response = await this.client.generateResponse(userMessage, systemPrompt);
     
-    return this.parseErrorRecoveryResponse(response.content);
+    return this.parseErrorRecoveryResponse(response);
   }
 
   async provideMotivation(
@@ -105,8 +105,8 @@ Pending tasks: ${session.pendingTasks.length}
 
 Provide a brief motivational message (1-2 sentences).`;
 
-    const response = await this.client.sendMessage(systemPrompt, userMessage);
-    return response.content;
+    const response = await this.client.generateResponse(userMessage, systemPrompt);
+    return response;
   }
 
   private buildAnalysisSystemPrompt(): string {

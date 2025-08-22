@@ -13,8 +13,8 @@ export declare const ClaudeCodeConfigSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     model: string;
     temperature: number;
-    useSubscription: boolean;
     projectPath: string;
+    useSubscription: boolean;
     maxIterations: number;
     timeoutMs: number;
     contextWindow: number;

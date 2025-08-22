@@ -1,7 +1,7 @@
 import { Mission, DoDCriteria } from '../models/mission';
 import { SessionState, SessionPhase, Artifact, ArtifactType } from '../models/session';
 import { OrchestrationMetrics } from '../models/metrics';
-import { OpenRouterClient } from '../llm/openrouter-client';
+import { ILLMClient } from '../llm/llm-provider';
 import { IClaudeCodeClient, ClaudeCodeResult } from '../llm/claude-code-interface';
 import { ProgressTracker } from './progress-tracker';
 import { SessionManager } from './session-manager';
@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface OrchestratorConfig {
   mission: Mission;
-  openRouterClient: OpenRouterClient;
+  openRouterClient: ILLMClient;
   claudeCodeClient: IClaudeCodeClient;
   sessionManager: SessionManager;
   logger: winston.Logger | EnhancedLogger;
@@ -35,7 +35,7 @@ export interface OrchestrationResult {
 
 export class Orchestrator {
   private mission: Mission;
-  private openRouterClient: OpenRouterClient;
+  private openRouterClient: ILLMClient;
   private claudeCodeClient: IClaudeCodeClient;
   private sessionManager: SessionManager;
   private progressTracker: ProgressTracker;

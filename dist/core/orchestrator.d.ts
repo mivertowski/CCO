@@ -1,14 +1,14 @@
 import { Mission } from '../models/mission';
 import { SessionState, Artifact } from '../models/session';
 import { OrchestrationMetrics } from '../models/metrics';
-import { OpenRouterClient } from '../llm/openrouter-client';
+import { ILLMClient } from '../llm/llm-provider';
 import { IClaudeCodeClient } from '../llm/claude-code-interface';
 import { SessionManager } from './session-manager';
 import { EnhancedLogger } from '../monitoring/logger';
 import winston from 'winston';
 export interface OrchestratorConfig {
     mission: Mission;
-    openRouterClient: OpenRouterClient;
+    openRouterClient: ILLMClient;
     claudeCodeClient: IClaudeCodeClient;
     sessionManager: SessionManager;
     logger: winston.Logger | EnhancedLogger;

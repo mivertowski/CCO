@@ -11,30 +11,30 @@ class ManagerLLM {
     async analyzeCurrentState(mission, session, progress) {
         const systemPrompt = this.buildAnalysisSystemPrompt();
         const userMessage = this.buildAnalysisUserMessage(mission, session, progress);
-        const response = await this.client.sendMessage(systemPrompt, userMessage);
-        return this.parseAnalysisResponse(response.content);
+        const response = await this.client.generateResponse(userMessage, systemPrompt);
+        return this.parseAnalysisResponse(response);
     }
     async planNextAction(analysis, criterion, session) {
         const systemPrompt = this.buildPlanningSystemPrompt();
         const userMessage = this.buildPlanningUserMessage(analysis, criterion, session);
-        const response = await this.client.sendMessage(systemPrompt, userMessage);
+        const response = await this.client.generateResponse(userMessage, systemPrompt);
         this.logger.info('Generated action plan', {
             criterionId: criterion.id,
-            planLength: response.content.length
+            planLength: response.length
         });
-        return response.content;
+        return response;
     }
     async validateCriterionCompletion(criterion, executionResult, session) {
         const systemPrompt = this.buildValidationSystemPrompt();
         const userMessage = this.buildValidationUserMessage(criterion, executionResult, session);
-        const response = await this.client.sendMessage(systemPrompt, userMessage);
-        return this.parseValidationResponse(response.content);
+        const response = await this.client.generateResponse(userMessage, systemPrompt);
+        return this.parseValidationResponse(response);
     }
     async generateErrorRecovery(error, session) {
         const systemPrompt = this.buildErrorRecoverySystemPrompt();
         const userMessage = this.buildErrorRecoveryUserMessage(error, session);
-        const response = await this.client.sendMessage(systemPrompt, userMessage);
-        return this.parseErrorRecoveryResponse(response.content);
+        const response = await this.client.generateResponse(userMessage, systemPrompt);
+        return this.parseErrorRecoveryResponse(response);
     }
     async provideMotivation(progress, session) {
         const systemPrompt = `You are an encouraging project manager. Provide brief, positive motivation.`;
@@ -45,8 +45,8 @@ Completed tasks: ${session.completedTasks.length}
 Pending tasks: ${session.pendingTasks.length}
 
 Provide a brief motivational message (1-2 sentences).`;
-        const response = await this.client.sendMessage(systemPrompt, userMessage);
-        return response.content;
+        const response = await this.client.generateResponse(userMessage, systemPrompt);
+        return response;
     }
     buildAnalysisSystemPrompt() {
         return `You are an expert project manager analyzing the current state of a software development mission.

@@ -78,7 +78,8 @@ class ClaudeCodeSDKClient {
                 customSystemPrompt: this.config.systemPrompt || this.buildSystemPrompt(context),
                 maxTurns: this.config.maxTurns,
                 cwd: context?.workingDirectory || this.config.projectPath,
-                permissionMode: this.config.planMode ? 'plan' : 'default',
+                // Use bypassPermissions mode to skip all permission prompts for automated execution
+                permissionMode: this.config.planMode ? 'plan' : 'bypassPermissions',
                 // Let SDK use default tools based on the environment
                 // Most common code tools are available by default
             };

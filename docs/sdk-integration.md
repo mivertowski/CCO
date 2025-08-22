@@ -5,8 +5,14 @@ CCO now supports the official Claude Code SDK (`@anthropic-ai/claude-code`) for 
 ## Overview
 
 The SDK integration offers two execution modes:
-- **SDK Mode** (Recommended): Uses the official Claude Code SDK for direct automation
+- **SDK Mode** (Recommended): Uses the official Claude Code SDK for direct automation with Claude Opus 4.1
 - **Legacy Mode**: Uses the Anthropic API directly (for backward compatibility)
+
+### Key Features
+- **Claude Opus 4.1**: Latest and most capable model by default
+- **Automatic Permission Bypass**: Full automation without user prompts
+- **Multi-Turn Conversations**: Configurable iteration limits
+- **Session Management**: Persistent context across operations
 
 ## Configuration
 
@@ -64,7 +70,7 @@ interface ClaudeCodeSDKConfig {
   apiKey?: string;           // Optional, uses ANTHROPIC_API_KEY env var
   projectPath: string;       // Working directory for code operations
   maxTurns: number;          // Max conversation turns (default: 10)
-  model: string;             // Model to use (default: claude-3-5-sonnet)
+  model: string;             // Model to use (default: claude-opus-4-1-20250805)
   temperature: number;       // Response randomness 0-1 (default: 0.3)
   systemPrompt?: string;     // Custom system prompt
   planMode: boolean;         // Analysis without modifications (default: false)
@@ -104,8 +110,10 @@ The SDK provides access to various tools for code operations:
 Control how the SDK handles file modifications:
 - `default`: Ask for permission before changes
 - `acceptEdits`: Auto-accept all edits
-- `bypassPermissions`: Skip all permission checks
+- `bypassPermissions`: Skip all permission checks (default for automation)
 - `plan`: Analyze without making changes
+
+**Note**: CCO uses `bypassPermissions` mode by default for fully automated execution.
 
 ### Session Management
 The SDK maintains session context across multiple turns:

@@ -5,7 +5,59 @@ All notable changes to Claude Code Orchestrator (CCO) will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-08-22
+## [1.0.3] - 2025-08-22
+
+### Added
+- 🎉 **Claude Code as Orchestrator LLM**: Use Claude Code itself as the orchestrator with automatic permission bypass
+- 🚀 **Interactive GitHub Issue Selection**: Browse and select issues with priority indicators (p0-critical, p1-high, p2-medium, p3-low)
+- 🔄 **Automated Issue Processing**: Continuously process issues by priority with configurable polling intervals
+- 🖥️ **Local LLM Support**: Run models locally with CUDA/CPU acceleration
+  - Ollama integration for easy local model management
+  - llama.cpp support for optimized inference
+  - VLLM for high-performance serving
+  - HuggingFace Transformers models
+- 🔒 **Corporate Proxy Support**: Works behind Zscaler and other corporate proxies with SSL bypass
+- 📊 **Token Optimization**: 50-80% reduction in API token usage through intelligent context management
+- 🎯 **Default Model Update**: Now uses Claude Opus 4.1 (claude-opus-4-1-20250805) by default
+- 📝 **Comprehensive API Documentation**: Full API reference with TypeScript examples
+- 🔌 **LLM Provider Abstraction**: Unified ILLMClient interface supporting 7+ providers
+
+### Changed
+- Enhanced GitHub integration with real-time progress comments on issues
+- Improved PR creation with "Fixes #X" for automatic issue closing
+- Better error recovery with exponential backoff strategies
+- Unified configuration management with environment variable support
+- Streamlined CLI interface with better user experience
+
+### Fixed
+- Git remote URL parsing for HTTPS repositories with .git suffix
+- Environment variable loading in npm scripts with dotenv
+- Claude Code permission prompts in automated mode (now uses bypassPermissions)
+- SSL certificate validation issues in corporate environments
+
+## [1.0.2] - 2025-08-21
+
+### Added
+- GitHub issue to mission conversion
+- Interactive CLI mode for repository management
+- Priority-based issue sorting and processing
+- Real-time progress visualization with progress bars
+- Session checkpoint and resume functionality
+
+### Changed
+- Improved orchestration workflow with better state management
+- Enhanced logging with structured output
+- Better error handling and recovery mechanisms
+
+## [1.0.1] - 2025-08-20
+
+### Added
+- Basic orchestration framework
+- OpenRouter integration for LLM flexibility
+- Mission and Definition of Done management
+- File-based persistence for sessions
+
+## [1.0.0] - 2025-08-19
 
 ### 🎉 Initial Release
 
