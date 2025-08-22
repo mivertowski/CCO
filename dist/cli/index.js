@@ -376,10 +376,12 @@ program
             const execAsync = promisify(exec);
             try {
                 const { stdout } = await execAsync('git remote get-url origin');
-                const match = stdout.match(/github\.com[:/](.+?)\/(.+?)(\.git)?$/);
+                const cleanUrl = stdout.trim();
+                // Handle both HTTPS and SSH URLs
+                const match = cleanUrl.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
                 if (match) {
                     owner = match[1];
-                    repo = match[2];
+                    repo = match[2].replace(/\.git$/, ''); // Remove .git if present
                 }
                 else {
                     throw new Error('Could not parse GitHub repository from remote');
