@@ -434,7 +434,29 @@ export class Orchestrator {
   }
 
   private isComplete(): boolean {
-    return this.progressTracker.checkCompletion(this.mission);
+    const dodCount = this.mission.definitionOfDone.length;
+    const completedCount = this.mission.definitionOfDone.filter(d => d.completed).length;
+    
+    this.logger.debug('Checking orchestration completion', {
+      dodCount,
+      completedCount,
+      dodCriteria: this.mission.definitionOfDone.map(d => ({
+        id: d.id,
+        completed: d.completed,
+        description: d.description.substring(0, 50)
+      }))
+    });
+    
+    const isComplete = this.progressTracker.checkCompletion(this.mission);
+    
+    this.logger.debug('Orchestration completion check result', {
+      isComplete,
+      reason: dodCount === 0 ? 'No DoD criteria defined' : 
+              completedCount === dodCount ? 'All DoD criteria completed' :
+              `${completedCount}/${dodCount} DoD criteria completed`
+    });
+    
+    return isComplete;
   }
 
   private async prepareFinalResult(): Promise<OrchestrationResult> {

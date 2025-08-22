@@ -44,19 +44,34 @@ export class ProgressTracker {
   }
 
   checkCompletion(mission: Mission): boolean {
-    const allCompleted = mission.definitionOfDone.every(dod => dod.completed);
-    
-    const allCriticalCompleted = mission.definitionOfDone
-      .filter(dod => dod.priority === DoDPriority.CRITICAL)
-      .every(dod => dod.completed);
-    
-    if (!allCriticalCompleted) {
-      this.logger.info('Mission not complete - critical criteria pending', {
+    // If there are no DoD criteria, the mission cannot be complete
+    if (mission.definitionOfDone.length === 0) {
+      this.logger.warn('Mission has no Definition of Done criteria', {
         missionId: mission.id
       });
       return false;
     }
     
+    const allCompleted = mission.definitionOfDone.every(dod => dod.completed);
+    
+    // Get criteria by priority
+    const criticalCriteria = mission.definitionOfDone
+      .filter(dod => dod.priority === DoDPriority.CRITICAL);
+    const highCriteria = mission.definitionOfDone
+      .filter(dod => dod.priority === DoDPriority.HIGH);
+    
+    // Check if all critical criteria are completed (if any exist)
+    if (criticalCriteria.length > 0) {
+      const allCriticalCompleted = criticalCriteria.every(dod => dod.completed);
+      if (!allCriticalCompleted) {
+        this.logger.info('Mission not complete - critical criteria pending', {
+          missionId: mission.id
+        });
+        return false;
+      }
+    }
+    
+    // If all criteria are completed, mission is complete
     if (allCompleted) {
       this.logger.info('Mission complete - all DoD criteria met', {
         missionId: mission.id
@@ -64,11 +79,15 @@ export class ProgressTracker {
       return true;
     }
     
-    const highPriorityCompleted = mission.definitionOfDone
-      .filter(dod => dod.priority === DoDPriority.HIGH)
-      .every(dod => dod.completed);
+    // If there are high priority criteria, they must be completed along with critical
+    if (highCriteria.length > 0 || criticalCriteria.length > 0) {
+      const highCompleted = highCriteria.length === 0 || highCriteria.every(dod => dod.completed);
+      const criticalCompleted = criticalCriteria.length === 0 || criticalCriteria.every(dod => dod.completed);
+      return highCompleted && criticalCompleted;
+    }
     
-    return allCriticalCompleted && highPriorityCompleted;
+    // For medium and low priority only missions, all must be completed
+    return false;
   }
 
   markCriterionComplete(

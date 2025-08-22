@@ -547,6 +547,7 @@ program
                 let claudeCodeClient = null;
                 // Always initialize both clients for GitHub integration
                 if (process.env.OPENROUTER_API_KEY) {
+                    console.log(chalk_1.default.gray(`Initializing OpenRouter client with API key (${process.env.OPENROUTER_API_KEY.substring(0, 10)}...)`));
                     openRouterClient = new openrouter_client_1.OpenRouterClient({
                         apiKey: process.env.OPENROUTER_API_KEY,
                         model: config.openrouter?.model || 'claude-3-opus',
@@ -556,6 +557,9 @@ program
                         retryAttempts: 3,
                         retryDelay: 1000
                     }, baseLogger);
+                }
+                else {
+                    console.log(chalk_1.default.yellow('No OpenRouter API key found'));
                 }
                 if (process.env.ANTHROPIC_API_KEY || config.claude_code?.use_subscription) {
                     claudeCodeClient = new claude_code_sdk_client_1.ClaudeCodeSDKClient({
@@ -567,6 +571,10 @@ program
                         planMode: false,
                         jsonMode: false
                     }, baseLogger);
+                }
+                // Check if we have at least one client
+                if (!openRouterClient && !claudeCodeClient) {
+                    throw new Error('No LLM client available. Please set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in your .env file');
                 }
                 // Create orchestrator
                 const orchestrator = new orchestrator_1.Orchestrator({

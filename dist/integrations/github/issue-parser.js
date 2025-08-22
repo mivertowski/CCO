@@ -57,13 +57,19 @@ class GitHubIssueParser {
             const config = this.extractYamlConfig(issue.body);
             // Extract priority from labels (not used currently)
             // const priority = this.extractPriority(issue.labels);
-            // Create mission
+            // Create mission - ensure DoD criteria start as incomplete
+            const definitionOfDone = (dodCriteria.length > 0 ? dodCriteria : this.generateDefaultDoD(issue))
+                .map(dod => ({
+                ...dod,
+                completed: false, // Always start as incomplete for new missions
+                completedAt: undefined
+            }));
             const mission = {
                 id: `gh-issue-${issueNumber}-${(0, uuid_1.v4)().substring(0, 8)}`,
                 title: issue.title.replace(/^\[CCO\]\s*/i, ''), // Remove [CCO] prefix if present
                 description: this.extractDescription(issue.body),
                 repository: process.cwd(),
-                definitionOfDone: dodCriteria.length > 0 ? dodCriteria : this.generateDefaultDoD(issue),
+                definitionOfDone,
                 createdAt: new Date(issue.created_at),
                 metadata: {
                     github: {
@@ -78,6 +84,11 @@ class GitHubIssueParser {
             this.logger.info('Created mission from issue', {
                 missionId: mission.id,
                 dodCount: mission.definitionOfDone.length,
+                dodCriteria: mission.definitionOfDone.map(d => ({
+                    id: d.id,
+                    completed: d.completed,
+                    description: d.description.substring(0, 50)
+                }))
             });
             return mission;
         }

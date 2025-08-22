@@ -1,6 +1,6 @@
 {
   "name": "cco-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Automated orchestration system for managing Claude Code instances to complete complex tasks",
   "main": "dist/index.js",
   "bin": {
@@ -11,6 +11,7 @@
     "build": "tsc",
     "dev": "tsx watch src/cli/index.ts",
     "start": "node dist/cli/index.js",
+    "cco": "node -r dotenv/config dist/cli/index.js",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",

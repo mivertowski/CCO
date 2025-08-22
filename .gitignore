@@ -164,3 +164,4 @@ debug/
 test-orchestration.sh
 simple-test-mission.yaml
 quick-test.ts
+test-mock-mode.sh
