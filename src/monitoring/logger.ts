@@ -37,7 +37,7 @@ export interface LogMetadata {
  * Custom format for pretty console output
  */
 const prettyConsoleFormat = winston.format.printf((info: any) => {
-  const { level, message, timestamp, context, ...metadata } = info;
+  const { level: _level, message, timestamp, context, ...metadata } = info;
   const time = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
   const contextStr = context ? chalk.cyan(`[${context}]`) : '';
   

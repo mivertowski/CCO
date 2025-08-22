@@ -210,8 +210,8 @@ export class TokenOptimizer {
    */
   private summarizeLongLists(text: string): string {
     // Summarize long arrays
-    text = text.replace(/\[[\s\S]{500,}?\]/g, (match) => {
-      const items = match.match(/[^,\[\]]+/g) || [];
+    text = text.replace(/[[\s\S]{500,}?]/g, (match) => {
+      const items = match.match(/[^,[\]]+/g) || [];
       return `[... ${items.length} items ...]`;
     });
     

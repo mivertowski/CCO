@@ -206,7 +206,7 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
 
   private handleMessage(message: SDKMessage, result: ClaudeCodeSDKResult): void {
     switch (message.type) {
-      case 'result':
+      case 'result': {
         const resultMsg = message as SDKResultMessage;
         // Handle result based on subtype
         if (resultMsg.subtype === 'success') {
@@ -230,6 +230,7 @@ ${this.config.planMode ? 'NOTE: You are in PLAN MODE - analyze and plan but do n
           };
         }
         break;
+      }
         
       case 'assistant':
         // Assistant messages contain the actual work being done
