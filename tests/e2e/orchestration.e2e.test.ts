@@ -111,7 +111,8 @@ mission:
       // Save checkpoint
       session.iterations = 5;
       session.completedTasks.push('task-1');
-      await sessionManager.saveCheckpoint(session);
+      await sessionManager.saveSession(session);
+      await sessionManager.checkpoint(session.sessionId);
       
       // Recover session
       const recovered = await sessionManager.recover(session.sessionId);
