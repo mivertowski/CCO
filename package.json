@@ -1,6 +1,6 @@
 {
   "name": "cco-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automated orchestration system for managing Claude Code instances to complete complex tasks",
   "main": "dist/index.js",
   "bin": {
